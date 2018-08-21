@@ -70,6 +70,7 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@rdfjs/data-model": "^1.1.0"
+    "@rdfjs/data-model": "^1.1.0",
+    "xml-stream": "^0.4.5"
   }
 }
