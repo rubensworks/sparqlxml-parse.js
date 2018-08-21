@@ -66,7 +66,7 @@ This library automatically converts all SPARQL XML result values to their respec
 ### Create a new parser
 
 ```javascript
-import {SparqlXmlParser} from "../lib/SparqlXmlParser";
+import {SparqlXmlParser} from "sparqlxml-parse";
 
 const sparqlXmlParser = new SparqlXmlParser();
 ```
