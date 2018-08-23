@@ -71,6 +71,6 @@
   },
   "dependencies": {
     "@rdfjs/data-model": "^1.1.0",
-    "xml-stream": "^0.4.5"
+    "sax-stream": "^1.2.3"
   }
 }

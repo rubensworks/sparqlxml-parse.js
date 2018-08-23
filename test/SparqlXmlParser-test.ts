@@ -241,9 +241,16 @@ describe('SparqlXmlParser', () => {
   describe('#parseXmlBindings', () => {
     it('should convert bindings with named nodes', () => {
       const binding = {
-        binding: [
-          { uri: 'http://example.org/book/book6', $: { name: 'book' } },
-        ],
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book' },
+              children: {
+                uri: { value: 'http://example.org/book/book6' },
+              },
+            },
+          ],
+        },
       };
       return expect(parser.parseXmlBindings(binding))
         .toEqual({ '?book': namedNode('http://example.org/book/book6') });
@@ -251,9 +258,16 @@ describe('SparqlXmlParser', () => {
 
     it('should convert bindings with named nodes without variable prefixing', () => {
       const binding = {
-        binding: [
-          { uri: 'http://example.org/book/book6', $: { name: 'book' } },
-        ],
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book' },
+              children: {
+                uri: { value: 'http://example.org/book/book6' },
+              },
+            },
+          ],
+        },
       };
       return expect(new SparqlXmlParser().parseXmlBindings(binding))
         .toEqual({ book: namedNode('http://example.org/book/book6') });
@@ -261,49 +275,104 @@ describe('SparqlXmlParser', () => {
 
     it('should convert bindings with blank nodes', () => {
       const binding = {
-        binding: [
-          { bnode: 'abc', $: { name: 'book' } },
-        ],
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book' },
+              children: {
+                bnode: { value: 'abc' },
+              },
+            },
+          ],
+        },
       };
       return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': blankNode('abc') });
     });
 
     it('should convert bindings with literals', () => {
       const binding = {
-        binding: [
-          { literal: 'abc', $: { name: 'book' } },
-        ],
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book' },
+              children: {
+                literal: { value: 'abc' },
+              },
+            },
+          ],
+        },
       };
       return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('abc') });
     });
 
     it('should convert bindings with languaged literals', () => {
       const binding = {
-        binding: [
-          { literal: { $text: 'abc', $: { 'xml:lang': 'en-us' } }, $: { name: 'book' } },
-        ],
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book' },
+              children: {
+                literal: { value: 'abc', attribs: { 'xml:lang': 'en-us' } },
+              },
+            },
+          ],
+        },
       };
       return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('abc', 'en-us') });
     });
 
     it('should convert bindings with datatyped literals', () => {
       const binding = {
-        binding: [
-          { literal: { $text: 'abc', $: { datatype: 'http://ex' } }, $: { name: 'book' } },
-        ],
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book' },
+              children: {
+                literal: { value: 'abc', attribs: { datatype: 'http://ex' } },
+              },
+            },
+          ],
+        },
       };
       return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('abc', namedNode('http://ex')) });
     });
 
     it('should convert mixed bindings', () => {
       const binding = {
-        binding: [
-          { uri: 'http://example.org/book/book6', $: { name: 'book1' } },
-          { bnode: 'abc', $: { name: 'book2' } },
-          { literal: 'abc', $: { name: 'book3' } },
-          { literal: { $text: 'abc', $: { 'xml:lang': 'en-us' } }, $: { name: 'book4' } },
-          { literal: { $text: 'abc', $: { datatype: 'http://ex' } }, $: { name: 'book5' } },
-        ],
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book1' },
+              children: {
+                uri: { value: 'http://example.org/book/book6' },
+              },
+            },
+            {
+              attribs: { name: 'book2' },
+              children: {
+                bnode: { value: 'abc' },
+              },
+            },
+            {
+              attribs: { name: 'book3' },
+              children: {
+                literal: { value: 'abc' },
+              },
+            },
+            {
+              attribs: { name: 'book4' },
+              children: {
+                literal: { value: 'abc', attribs: { 'xml:lang': 'en-us' } },
+              },
+            },
+            {
+              attribs: { name: 'book5' },
+              children: {
+                literal: { value: 'abc', attribs: { datatype: 'http://ex' } },
+              },
+            },
+          ],
+        },
       };
       return expect(parser.parseXmlBindings(binding)).toEqual({
         '?book1': namedNode('http://example.org/book/book6'),
