@@ -3,7 +3,7 @@ import * as RDF from "rdf-js";
 import {Readable} from "stream";
 import {SparqlXmlBindingsTransformer} from "./SparqlXmlBindingsTransformer";
 // tslint:disable-next-line:no-var-requires
-const XmlStream = require('xml-stream');
+const XmlNode = require('sax-stream');
 
 /**
  * Parser for the SPARQL Query Results XML format.
@@ -30,23 +30,23 @@ export class SparqlXmlParser {
    * @return {NodeJS.ReadableStream} A stream of bindings.
    */
   public parseXmlResultsStream(sparqlResponseStream: NodeJS.ReadableStream): NodeJS.ReadableStream {
+    // Collect variables
     const variables: RDF.Variable[] = [];
+    sparqlResponseStream
+      .pipe(XmlNode({ strict: true, tag: 'variable' }))
+      .on('data', (node: any) => variables.push(this.dataFactory.variable(node.attribs.name)))
+      .on('error', () => { return; }) // Ignore errors, they will emitted in the results
+      .on('finish', () => resultStream.emit('variables', variables));
 
-    const rawResultStream = new Readable({ objectMode: true });
-    rawResultStream._read = () => { return; };
+    // Collect results
+    const resultStream = sparqlResponseStream
+      .pipe(XmlNode({ strict: true, tag: 'result' }))
+      .on('error', (error: Error) => resultStream.emit('error', error))
+      .pipe(new SparqlXmlBindingsTransformer(this));
 
-    const xmlParser = new XmlStream(sparqlResponseStream);
-    xmlParser.collect('binding', true);
-    xmlParser.on('error', (error: Error) => resultStream.emit('error', error));
-    xmlParser.on('endElement: head > variable', (node: any) => variables.push(this.dataFactory.variable(node.$.name)));
-    xmlParser.on('endElement: results result',  (bindings: any) => rawResultStream.push(bindings));
-    xmlParser.on('end', () => {
-      resultStream.emit('variables', variables);
-      rawResultStream.push(null);
-    });
-
-    const resultStream = rawResultStream.pipe(new SparqlXmlBindingsTransformer(this));
+    // Propagate errors
     sparqlResponseStream.on('error', (error) => resultStream.emit('error', error));
+
     return resultStream;
   }
 
@@ -57,22 +57,23 @@ export class SparqlXmlParser {
    */
   public parseXmlBindings(rawBindings: any): IBindings {
     const bindings: IBindings = {};
-    for (const binding of rawBindings.binding) {
-      const key = binding.$.name;
+    for (const binding of rawBindings.children.binding) {
+      const key = binding.attribs.name;
       let value: RDF.Term = null;
-      if (binding.bnode) {
-        value = this.dataFactory.blankNode(binding.bnode);
-      } else if (binding.literal) {
-        if (binding.literal.$ && binding.literal.$['xml:lang']) {
-          value = this.dataFactory.literal(binding.literal.$text, binding.literal.$['xml:lang']);
-        } else if (binding.literal.$ && binding.literal.$.datatype) {
-          value = this.dataFactory.literal(binding.literal.$text,
-            this.dataFactory.namedNode(binding.literal.$.datatype));
+      if (binding.children.bnode) {
+        value = this.dataFactory.blankNode(binding.children.bnode.value);
+      } else if (binding.children.literal) {
+        if (binding.children.literal.attribs && binding.children.literal.attribs['xml:lang']) {
+          value = this.dataFactory.literal(binding.children.literal.value,
+            binding.children.literal.attribs['xml:lang']);
+        } else if (binding.children.literal.attribs && binding.children.literal.attribs.datatype) {
+          value = this.dataFactory.literal(binding.children.literal.value,
+            this.dataFactory.namedNode(binding.children.literal.attribs.datatype));
         } else {
-          value = this.dataFactory.literal(binding.literal);
+          value = this.dataFactory.literal(binding.children.literal.value);
         }
       } else {
-        value = this.dataFactory.namedNode(binding.uri);
+        value = this.dataFactory.namedNode(binding.children.uri.value);
       }
       bindings[this.prefixVariableQuestionMark ? ('?' + key) : key] = value;
     }
@@ -88,10 +89,11 @@ export class SparqlXmlParser {
   public parseXmlBooleanStream(sparqlResponseStream: NodeJS.ReadableStream): Promise<boolean> {
     return new Promise((resolve, reject) => {
       sparqlResponseStream.on('error', reject);
-      const xmlParser = new XmlStream(sparqlResponseStream);
-      xmlParser.on('error', reject);
-      xmlParser.on('endElement: boolean', (node: any) => resolve(node.$text === 'true'));
-      xmlParser.on('end', () => reject(new Error('No valid ASK response was found.')));
+      sparqlResponseStream
+        .pipe(XmlNode({ strict: true, tag: 'boolean' }))
+        .on('error', reject)
+        .on('data', (node: any) => resolve(node.value === 'true'))
+        .on('end', () => reject(new Error('No valid ASK response was found.')));
     });
   }
 
