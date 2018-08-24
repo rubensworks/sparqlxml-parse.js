@@ -57,7 +57,9 @@ export class SparqlXmlParser {
    */
   public parseXmlBindings(rawBindings: any): IBindings {
     const bindings: IBindings = {};
-    for (const binding of rawBindings.children.binding) {
+    const bindingsArray = Array.isArray(rawBindings.children.binding)
+      ? rawBindings.children.binding : [ rawBindings.children.binding ];
+    for (const binding of bindingsArray) {
       const key = binding.attribs.name;
       let value: RDF.Term = null;
       if (binding.children.bnode) {

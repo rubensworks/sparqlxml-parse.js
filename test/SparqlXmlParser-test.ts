@@ -171,6 +171,26 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
+    it('should convert a SPARQL XML response with a single binding', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <bnode>r1</bnode>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`))))
+        .toEqual([
+          { '?x': blankNode('r1') },
+        ]);
+    });
+
     it('should convert a SPARQL XML response and emit the variables', async () => {
       const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
