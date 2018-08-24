@@ -191,6 +191,36 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
+    it('should convert a SPARQL XML response with an empty result', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result />
+  </results>
+</sparql>
+`))))
+        .toEqual([{}]);
+    });
+
+    it('should convert a SPARQL XML response with an empty binding', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding />
+    </result>
+  </results>
+</sparql>
+`))))
+        .toEqual([{}]);
+    });
+
     it('should convert a SPARQL XML response and emit the variables', async () => {
       const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">

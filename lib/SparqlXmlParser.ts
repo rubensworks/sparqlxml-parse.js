@@ -56,27 +56,31 @@ export class SparqlXmlParser {
    */
   public parseXmlBindings(rawBindings: any): IBindings {
     const bindings: IBindings = {};
-    const bindingsArray = Array.isArray(rawBindings.children.binding)
-      ? rawBindings.children.binding : [ rawBindings.children.binding ];
-    for (const binding of bindingsArray) {
-      const key = binding.attribs.name;
-      let value: RDF.Term = null;
-      if (binding.children.bnode) {
-        value = this.dataFactory.blankNode(binding.children.bnode.value);
-      } else if (binding.children.literal) {
-        if (binding.children.literal.attribs && binding.children.literal.attribs['xml:lang']) {
-          value = this.dataFactory.literal(binding.children.literal.value,
-            binding.children.literal.attribs['xml:lang']);
-        } else if (binding.children.literal.attribs && binding.children.literal.attribs.datatype) {
-          value = this.dataFactory.literal(binding.children.literal.value,
-            this.dataFactory.namedNode(binding.children.literal.attribs.datatype));
-        } else {
-          value = this.dataFactory.literal(binding.children.literal.value);
+    if (rawBindings.children) {
+      const bindingsArray = Array.isArray(rawBindings.children.binding)
+        ? rawBindings.children.binding : [rawBindings.children.binding];
+      for (const binding of bindingsArray) {
+        if (binding.attribs) {
+          const key = binding.attribs.name;
+          let value: RDF.Term = null;
+          if (binding.children.bnode) {
+            value = this.dataFactory.blankNode(binding.children.bnode.value);
+          } else if (binding.children.literal) {
+            if (binding.children.literal.attribs && binding.children.literal.attribs['xml:lang']) {
+              value = this.dataFactory.literal(binding.children.literal.value,
+                binding.children.literal.attribs['xml:lang']);
+            } else if (binding.children.literal.attribs && binding.children.literal.attribs.datatype) {
+              value = this.dataFactory.literal(binding.children.literal.value,
+                this.dataFactory.namedNode(binding.children.literal.attribs.datatype));
+            } else {
+              value = this.dataFactory.literal(binding.children.literal.value);
+            }
+          } else {
+            value = this.dataFactory.namedNode(binding.children.uri.value);
+          }
+          bindings[this.prefixVariableQuestionMark ? ('?' + key) : key] = value;
         }
-      } else {
-        value = this.dataFactory.namedNode(binding.children.uri.value);
       }
-      bindings[this.prefixVariableQuestionMark ? ('?' + key) : key] = value;
     }
     return bindings;
   }
