@@ -14,7 +14,13 @@ export class SparqlXmlBindingsTransformer extends Transform {
   }
 
   public _transform(chunk: any, encoding: string, callback: TransformCallback): void {
-    callback(null, this.parser.parseXmlBindings(chunk));
+    let bindings;
+    try {
+      bindings = this.parser.parseXmlBindings(chunk);
+    } catch (e) {
+      return callback(e);
+    }
+    callback(null, bindings);
   }
 
 }

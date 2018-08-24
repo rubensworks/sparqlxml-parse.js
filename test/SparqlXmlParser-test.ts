@@ -232,9 +232,28 @@ describe('SparqlXmlParser', () => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(errorStream))).rejects.toBeTruthy();
     });
 
-    it('should emit an error on an invalid SPARQL XML response\'', async () => {
+    it('should emit an error on an invalid XML response\'', async () => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`
 <?xml version="1.0"?>abc`)))).rejects.toBeTruthy();
+    });
+
+    it('should emit an error on an invalid SPARQL XML response\'', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+    <variable name="hpage"/>
+    <variable name="name"/>
+    <variable name="age"/>
+    <variable name="mbox"/>
+    <variable name="friend"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x" />
+    </result>
+  </results>
+</sparql>`)))).rejects.toBeTruthy();
     });
   });
 
