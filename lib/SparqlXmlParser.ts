@@ -1,6 +1,5 @@
 import * as DefaultDataFactory from "@rdfjs/data-model";
 import * as RDF from "rdf-js";
-import {Readable} from "stream";
 import {SparqlXmlBindingsTransformer} from "./SparqlXmlBindingsTransformer";
 // tslint:disable-next-line:no-var-requires
 const XmlNode = require('sax-stream');
