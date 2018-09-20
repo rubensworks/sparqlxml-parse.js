@@ -17,7 +17,7 @@ describe('SparqlXmlParser', () => {
     });
 
     it('should have the default data factory', () => {
-      return expect((<any> optionlessInstance).dataFactory).toBe(require('@rdfjs/data-model'));
+      return expect((<any> optionlessInstance).dataFactory).toMatchObject({...require('@rdfjs/data-model')});
     });
 
     it('should not prefix variables with a question mark', () => {
@@ -33,7 +33,7 @@ describe('SparqlXmlParser', () => {
     });
 
     it('should have the default data factory', () => {
-      return expect((<any> optionsEmptyInstance).dataFactory).toBe(require('@rdfjs/data-model'));
+      return expect((<any> optionsEmptyInstance).dataFactory).toMatchObject({...require('@rdfjs/data-model')});
     });
 
     it('should not prefix variables with a question mark', () => {
