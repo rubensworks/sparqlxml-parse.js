@@ -287,7 +287,8 @@ describe('SparqlXmlParser', () => {
 <?xml version="1.0"?>abc`)))).rejects.toBeTruthy();
     });
 
-    it('should emit an error on an invalid SPARQL XML response\'', async () => {
+    it('should emit an error when an unexpected error occurs in parseXmlBindings', async () => {
+      parser.parseXmlBindings = null;
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -308,6 +309,46 @@ describe('SparqlXmlParser', () => {
   });
 
   describe('#parseXmlBindings', () => {
+    it('should convert bindings with no attributes', () => {
+      const binding = {
+        children: {
+          binding: [
+            {
+              children: {
+                uri: { value: 'http://example.org/book/book6' },
+              },
+            },
+          ],
+        },
+      };
+      return expect(parser.parseXmlBindings(binding)).toEqual({});
+    });
+
+    it('should convert bindings with no children', () => {
+      const binding = {
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book' },
+            },
+          ],
+        },
+      };
+      return expect(parser.parseXmlBindings(binding)).toEqual({});
+    });
+
+    it('should convert bindings with no attributes and children', () => {
+      const binding = {
+        children: {
+          binding: [
+            {
+            },
+          ],
+        },
+      };
+      return expect(parser.parseXmlBindings(binding)).toEqual({});
+    });
+
     it('should convert bindings with named nodes', () => {
       const binding = {
         children: {
