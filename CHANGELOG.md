@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.2.0"></a>
+## [v1.2.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.1.3...v1.2.0) - 2018-11-08
+
+### Changed
+* [Update to generic RDFJS typings](https://github.com/rubensworks/sparqlxml-parse.js/commit/474757e3497d3c4713e0f30eb8b2d700afcee73b)
+
 <a name="1.1.3"></a>
 ## [1.1.3](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.1.2...v1.1.3) - 2018-09-21
 - [Fix crash when bindings without children are present](https://github.com/rubensworks/sparqlxml-parse.js/commit/ed2e9ee1a75ed8a1a548020c02c35a36f9b4f76b)
