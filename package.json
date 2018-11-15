@@ -77,6 +77,6 @@
   },
   "dependencies": {
     "@rdfjs/data-model": "^1.1.1",
-    "sax-stream": "^1.2.3"
+    "sax-stream": "1.2.3"
   }
 }
