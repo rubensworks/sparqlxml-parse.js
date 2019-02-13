@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.2.1"></a>
+## [v1.2.1](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.2.0...v1.2.1) - 2019-02-13
+
+### Fixed
+* [Handle emtpy literals correctly](https://github.com/rubensworks/sparqlxml-parse.js/commit/47b67208443899287564882bac6c8f9e193fd359)
+
 <a name="v1.2.0"></a>
 ## [v1.2.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.1.3...v1.2.0) - 2018-11-08
 
