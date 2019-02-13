@@ -62,23 +62,23 @@ export class SparqlXmlParser {
       for (const binding of bindingsArray) {
         if (binding.attribs && binding.children) {
           const key = binding.attribs.name;
-          let value: RDF.Term = null;
+          let term: RDF.Term = null;
           if (binding.children.bnode) {
-            value = this.dataFactory.blankNode(binding.children.bnode.value);
+            term = this.dataFactory.blankNode(binding.children.bnode.value);
           } else if (binding.children.literal) {
-            if (binding.children.literal.attribs && binding.children.literal.attribs['xml:lang']) {
-              value = this.dataFactory.literal(binding.children.literal.value,
-                binding.children.literal.attribs['xml:lang']);
-            } else if (binding.children.literal.attribs && binding.children.literal.attribs.datatype) {
-              value = this.dataFactory.literal(binding.children.literal.value,
-                this.dataFactory.namedNode(binding.children.literal.attribs.datatype));
+            const value = binding.children.literal.value || "";
+            const attribs = binding.children.literal.attribs;
+            if (attribs && attribs['xml:lang']) {
+              term = this.dataFactory.literal(value, attribs['xml:lang']);
+            } else if (attribs && attribs.datatype) {
+              term = this.dataFactory.literal(value, this.dataFactory.namedNode(attribs.datatype));
             } else {
-              value = this.dataFactory.literal(binding.children.literal.value);
+              term = this.dataFactory.literal(value);
             }
           } else {
-            value = this.dataFactory.namedNode(binding.children.uri.value);
+            term = this.dataFactory.namedNode(binding.children.uri.value);
           }
-          bindings[this.prefixVariableQuestionMark ? ('?' + key) : key] = value;
+          bindings[this.prefixVariableQuestionMark ? ('?' + key) : key] = term;
         }
       }
     }
@@ -87,7 +87,7 @@ export class SparqlXmlParser {
 
   /**
    * Convert a SPARQL XML boolean response stream to a promise resolving to a boolean.
-   * This will reject if the given reponse was not a valid boolean response.
+   * This will reject if the given response was not a valid boolean response.
    * @param {NodeJS.ReadableStream} sparqlResponseStream A SPARQL XML response stream.
    * @return {NodeJS.ReadableStream} A stream of bindings.
    */
