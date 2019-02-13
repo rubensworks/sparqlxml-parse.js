@@ -415,6 +415,40 @@ describe('SparqlXmlParser', () => {
       return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('abc') });
     });
 
+    it('should convert bindings with empty literals', () => {
+      const binding = {
+        children: {
+          binding: [
+            {
+              attribs: { name: 'book' },
+              children: {
+                literal: { value: '' },
+              },
+            },
+          ],
+        },
+      };
+      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('') });
+    });
+
+    it('should convert bindings with empty literals', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+        <sparql xmlns="http://www.w3.org/2005/sparql-results#">
+          <head>
+            <variable name="x"/>
+          </head>
+          <results>
+            <result>
+              <binding name="x">
+                <literal></literal>
+              </binding>
+            </result>
+          </results>
+        </sparql>
+        `))))
+        .toEqual([{ '?x': literal("") }]);
+    });
+
     it('should convert bindings with languaged literals', () => {
       const binding = {
         children: {
