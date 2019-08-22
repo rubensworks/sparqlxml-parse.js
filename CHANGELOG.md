@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.2.2"></a>
+## [v1.2.2](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.2.1...v1.2.2) - 2019-08-22
+
+### Fixed
+* [Add required typings as dependencies](https://github.com/rubensworks/sparqlxml-parse.js/commit/3724dde828336dad3e4576dd0d4fda789283510e)
+
 <a name="v1.2.1"></a>
 ## [v1.2.1](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.2.0...v1.2.1) - 2019-02-13
 
