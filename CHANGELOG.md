@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.3.0"></a>
+## [v1.3.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.2.2...v1.3.0) - 2020-08-24
+
+### Changed
+* [Update dependency @types/rdf-js to v3 (#23)](https://github.com/rubensworks/sparqlxml-parse.js/commit/98b25846cb281e0bcd48897e0434cfafd4e87f8a)
+
 <a name="v1.2.2"></a>
 ## [v1.2.2](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.2.1...v1.2.2) - 2019-08-22
 
