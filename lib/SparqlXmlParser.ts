@@ -1,4 +1,4 @@
-import * as DefaultDataFactory from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import * as RDF from "rdf-js";
 import {SparqlXmlBindingsTransformer} from "./SparqlXmlBindingsTransformer";
 // tslint:disable-next-line:no-var-requires
@@ -15,7 +15,7 @@ export class SparqlXmlParser {
 
   constructor(settings?: ISettings) {
     settings = settings || {};
-    this.dataFactory = settings.dataFactory || DefaultDataFactory;
+    this.dataFactory = settings.dataFactory || new DataFactory();
     this.prefixVariableQuestionMark = !!settings.prefixVariableQuestionMark;
   }
 

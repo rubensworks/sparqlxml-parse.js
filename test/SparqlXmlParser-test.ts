@@ -1,9 +1,11 @@
-import {blankNode, literal, namedNode, variable} from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import "jest-rdf";
 import {PassThrough} from "stream";
 import {SparqlXmlParser} from "../lib/SparqlXmlParser";
 const arrayifyStream = require('arrayify-stream');
 const streamifyString = require('streamify-string');
+
+const DF = new DataFactory();
 
 // tslint:disable:no-trailing-whitespace
 
@@ -17,7 +19,7 @@ describe('SparqlXmlParser', () => {
     });
 
     it('should have the default data factory', () => {
-      return expect((<any> optionlessInstance).dataFactory).toBe(require('@rdfjs/data-model'));
+      return expect((<any> optionlessInstance).dataFactory).toBeInstanceOf(DataFactory);
     });
 
     it('should not prefix variables with a question mark', () => {
@@ -33,7 +35,7 @@ describe('SparqlXmlParser', () => {
     });
 
     it('should have the default data factory', () => {
-      return expect((<any> optionsEmptyInstance).dataFactory).toBe(require('@rdfjs/data-model'));
+      return expect((<any> optionsEmptyInstance).dataFactory).toBeInstanceOf(DataFactory);
     });
 
     it('should not prefix variables with a question mark', () => {
@@ -153,20 +155,20 @@ describe('SparqlXmlParser', () => {
 `))))
         .toEqual([
           {
-            '?age': literal('1', namedNode('http://www.w3.org/2001/XMLSchema#integer')),
-            '?hpage': namedNode('http://work.example.org/bob1/'),
-            '?mbox': namedNode('mailto:bob1@work.example.org'),
-            '?name': literal('Bob1', 'en'),
-            '?nickname': literal('Bobby1'),
-            '?x': blankNode('r1'),
+            '?age': DF.literal('1', DF.namedNode('http://www.w3.org/2001/XMLSchema#integer')),
+            '?hpage': DF.namedNode('http://work.example.org/bob1/'),
+            '?mbox': DF.namedNode('mailto:bob1@work.example.org'),
+            '?name': DF.literal('Bob1', 'en'),
+            '?nickname': DF.literal('Bobby1'),
+            '?x': DF.blankNode('r1'),
           },
           {
-            '?age': literal('2', namedNode('http://www.w3.org/2001/XMLSchema#integer')),
-            '?hpage': namedNode('http://work.example.org/bob2/'),
-            '?mbox': namedNode('mailto:bob2@work.example.org'),
-            '?name': literal('Bob2', 'en'),
-            '?nickname': literal('Bobby2'),
-            '?x': blankNode('r2'),
+            '?age': DF.literal('2', DF.namedNode('http://www.w3.org/2001/XMLSchema#integer')),
+            '?hpage': DF.namedNode('http://work.example.org/bob2/'),
+            '?mbox': DF.namedNode('mailto:bob2@work.example.org'),
+            '?name': DF.literal('Bob2', 'en'),
+            '?nickname': DF.literal('Bobby2'),
+            '?x': DF.blankNode('r2'),
           },
         ]);
     });
@@ -187,7 +189,7 @@ describe('SparqlXmlParser', () => {
 </sparql>
 `))))
         .toEqual([
-          { '?x': blankNode('r1') },
+          { '?x': DF.blankNode('r1') },
         ]);
     });
 
@@ -272,7 +274,7 @@ describe('SparqlXmlParser', () => {
 </sparql>
 `));
       return expect(new Promise((resolve) => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
-        variable('x'), variable('hpage'), variable('name'), variable('age'), variable('mbox'), variable('friend'),
+        DF.variable('x'), DF.variable('hpage'), DF.variable('name'), DF.variable('age'), DF.variable('mbox'), DF.variable('friend'),
       ]);
     });
 
@@ -363,7 +365,7 @@ describe('SparqlXmlParser', () => {
         },
       };
       return expect(parser.parseXmlBindings(binding))
-        .toEqual({ '?book': namedNode('http://example.org/book/book6') });
+        .toEqual({ '?book': DF.namedNode('http://example.org/book/book6') });
     });
 
     it('should convert bindings with named nodes without variable prefixing', () => {
@@ -380,7 +382,7 @@ describe('SparqlXmlParser', () => {
         },
       };
       return expect(new SparqlXmlParser().parseXmlBindings(binding))
-        .toEqual({ book: namedNode('http://example.org/book/book6') });
+        .toEqual({ book: DF.namedNode('http://example.org/book/book6') });
     });
 
     it('should convert bindings with blank nodes', () => {
@@ -396,7 +398,7 @@ describe('SparqlXmlParser', () => {
           ],
         },
       };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': blankNode('abc') });
+      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.blankNode('abc') });
     });
 
     it('should convert bindings with literals', () => {
@@ -412,7 +414,7 @@ describe('SparqlXmlParser', () => {
           ],
         },
       };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('abc') });
+      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.literal('abc') });
     });
 
     it('should convert bindings with empty literals', () => {
@@ -428,7 +430,7 @@ describe('SparqlXmlParser', () => {
           ],
         },
       };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('') });
+      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.literal('') });
     });
 
     it('should convert bindings with empty literals', async () => {
@@ -446,7 +448,7 @@ describe('SparqlXmlParser', () => {
           </results>
         </sparql>
         `))))
-        .toEqual([{ '?x': literal("") }]);
+        .toEqual([{ '?x': DF.literal("") }]);
     });
 
     it('should convert bindings with languaged literals', () => {
@@ -462,7 +464,7 @@ describe('SparqlXmlParser', () => {
           ],
         },
       };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('abc', 'en-us') });
+      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.literal('abc', 'en-us') });
     });
 
     it('should convert bindings with datatyped literals', () => {
@@ -478,7 +480,7 @@ describe('SparqlXmlParser', () => {
           ],
         },
       };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': literal('abc', namedNode('http://ex')) });
+      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.literal('abc', DF.namedNode('http://ex')) });
     });
 
     it('should convert mixed bindings', () => {
@@ -519,11 +521,11 @@ describe('SparqlXmlParser', () => {
         },
       };
       return expect(parser.parseXmlBindings(binding)).toEqual({
-        '?book1': namedNode('http://example.org/book/book6'),
-        '?book2': blankNode('abc'),
-        '?book3': literal('abc'),
-        '?book4': literal('abc', 'en-us'),
-        '?book5': literal('abc', namedNode('http://ex')),
+        '?book1': DF.namedNode('http://example.org/book/book6'),
+        '?book2': DF.blankNode('abc'),
+        '?book3': DF.literal('abc'),
+        '?book4': DF.literal('abc', 'en-us'),
+        '?book5': DF.literal('abc', DF.namedNode('http://ex')),
       });
     });
   });
