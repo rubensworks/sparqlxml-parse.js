@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.4.0"></a>
+## [v1.4.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.3.0...v1.4.0) - 2020-09-16
+
+### Changed
+* [Migrate to rdf-data-factory and @types/rdf-js 4.x](https://github.com/rubensworks/sparqlxml-parse.js/commit/46f1b6221af949bb7b07bb2aa20ab5f4e4010e57)
+
 <a name="v1.3.0"></a>
 ## [v1.3.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.2.2...v1.3.0) - 2020-08-24
 
