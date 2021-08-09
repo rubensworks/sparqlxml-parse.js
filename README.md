@@ -1,6 +1,6 @@
 # SPARQL-Results+XML Parse
 
-[![Build Status](https://travis-ci.org/rubensworks/sparqlxml-parse.js.svg?branch=master)](https://travis-ci.org/rubensworks/sparqlxml-parse.js)
+[![Build status](https://github.com/rubensworks/sparqlxml-parse.js/workflows/CI/badge.svg)](https://github.com/rubensworks/sparqlxml-parse.js/actions?query=workflow%3ACI)
 [![Coverage Status](https://coveralls.io/repos/github/rubensworks/sparqlxml-parse.js/badge.svg?branch=master)](https://coveralls.io/github/rubensworks/sparqlxml-parse.js?branch=master)
 [![npm version](https://badge.fury.io/js/sparqlxml-parse.svg)](https://www.npmjs.com/package/sparqlxml-parse)
 
