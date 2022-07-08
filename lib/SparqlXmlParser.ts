@@ -1,8 +1,7 @@
 import {DataFactory} from "rdf-data-factory";
 import * as RDF from "@rdfjs/types";
-import {SparqlXmlBindingsTransformer} from "./SparqlXmlBindingsTransformer";
-// tslint:disable-next-line:no-var-requires
-const XmlNode = require('sax-stream');
+import {SaxesParser} from "saxes";
+import {Transform} from "readable-stream";
 
 /**
  * Parser for the SPARQL Query Results XML format.
@@ -29,79 +28,112 @@ export class SparqlXmlParser {
    * @return {NodeJS.ReadableStream} A stream of bindings.
    */
   public parseXmlResultsStream(sparqlResponseStream: NodeJS.ReadableStream): NodeJS.ReadableStream {
-    // Collect variables
+    const errorListener = (error: Error) => resultStream.emit('error', error);
+    sparqlResponseStream.on('error', errorListener);
+
+    const parser = new SaxesParser();
+    const stack: string[] = [];
     const variables: RDF.Variable[] = [];
-    sparqlResponseStream
-      .pipe(XmlNode({ strict: true, tag: 'variable' }))
-      .on('data', (node: any) => variables.push(this.dataFactory.variable(node.attribs.name)))
-      .on('error', () => { return; }) // Ignore errors, they will emitted in the results
-      .on('finish', () => resultStream.emit('variables', variables));
-
-    // Collect results
-    const resultStream = sparqlResponseStream
-      .pipe(XmlNode({ strict: true, tag: 'result' }))
-      .on('error', (error: Error) => resultStream.emit('error', error))
-      .pipe(new SparqlXmlBindingsTransformer(this));
-
-    // Propagate errors
-    sparqlResponseStream.on('error', (error) => resultStream.emit('error', error));
-
-    return resultStream;
-  }
-
-  /**
-   * Convert a SPARQL XML result binding to a bindings object.
-   * @param rawBindings A SPARQL XML result binding.
-   * @return {IBindings} A bindings object.
-   */
-  public parseXmlBindings(rawBindings: any): IBindings {
-    const bindings: IBindings = {};
-    if (rawBindings.children) {
-      const bindingsArray = Array.isArray(rawBindings.children.binding)
-        ? rawBindings.children.binding : [rawBindings.children.binding];
-      for (const binding of bindingsArray) {
-        if (binding.attribs && binding.children) {
-          const key = binding.attribs.name;
-          let term: RDF.Term = null;
-          if (binding.children.bnode) {
-            term = this.dataFactory.blankNode(binding.children.bnode.value);
-          } else if (binding.children.literal) {
-            const value = binding.children.literal.value || "";
-            const attribs = binding.children.literal.attribs;
-            if (attribs && attribs['xml:lang']) {
-              term = this.dataFactory.literal(value, attribs['xml:lang']);
-            } else if (attribs && attribs.datatype) {
-              term = this.dataFactory.literal(value, this.dataFactory.namedNode(attribs.datatype));
-            } else {
-              term = this.dataFactory.literal(value);
-            }
-          } else {
-            term = this.dataFactory.namedNode(binding.children.uri.value);
-          }
-          bindings[this.prefixVariableQuestionMark ? ('?' + key) : key] = term;
+    let currentBindings: IBindings = {};
+    let currentBindingName: string = '';
+    let currentBindingType: string = '';
+    let currentBindingAnnotation: string | RDF.NamedNode | undefined;
+    let currentText: string = '';
+    parser.on("error", errorListener);
+    parser.on("opentag", tag => {
+      if(tag.name === "variable" && this.stackEquals(stack,['sparql', 'head'])) {
+        variables.push(this.dataFactory.variable(tag.attributes.name));
+      } else if(tag.name === 'result' && this.stackEquals(stack, ['sparql', 'results'])) {
+        currentBindings = {};
+      } else if(tag.name === 'binding' && this.stackEquals(stack, ['sparql', 'results', 'result'])) {
+        currentBindingName = tag.attributes.name || '';
+        currentBindingType = '';
+        currentBindingAnnotation = '';
+        currentText = '';
+      } else if(this.stackEquals(stack, ['sparql', 'results', 'result', 'binding'])) {
+        currentBindingType = tag.name;
+        if('xml:lang' in tag.attributes) {
+          currentBindingAnnotation = tag.attributes['xml:lang'];
+        } else if('datatype' in tag.attributes) {
+          currentBindingAnnotation = this.dataFactory.namedNode(tag.attributes.datatype);
+        } else {
+          currentBindingAnnotation = undefined;
         }
       }
-    }
-    return bindings;
+      stack.push(tag.name);
+    })
+    parser.on("closetag", tag => {
+      if(this.stackEquals(stack, ['sparql', 'head'])) {
+        resultStream.emit("variables", variables);
+      }
+      if(this.stackEquals(stack, ['sparql', 'results', 'result'])) {
+        resultStream.push(currentBindings);
+      }
+      if(this.stackEquals(stack, ['sparql', 'results', 'result', 'binding'])) {
+        const key = this.prefixVariableQuestionMark ? ('?' + currentBindingName) : currentBindingName;
+        if(!currentBindingName && currentBindingType) {
+          errorListener(new Error(`Terms should have a name on line ${parser.line + 1}`));
+        } else if(currentBindingType === 'uri') {
+          currentBindings[key] = this.dataFactory.namedNode(currentText);
+        } else if(currentBindingType === 'bnode') {
+          currentBindings[key] = this.dataFactory.blankNode(currentText);
+        } else if (currentBindingType === 'literal') {
+          currentBindings[key] = this.dataFactory.literal(currentText, currentBindingAnnotation);
+        } else if(currentBindingType) {
+          errorListener(new Error(`Invalid term type '${currentBindingType}' on line ${parser.line + 1}`));
+        }
+      }
+      stack.pop();
+    })
+    parser.on("text", text => {
+      if(this.stackEquals(stack, ['sparql', 'results', 'result', 'binding', currentBindingType])) {
+        currentText = text;
+      }
+    })
+
+    const resultStream = sparqlResponseStream
+        .pipe(new Transform({
+          objectMode: true,
+          transform(chunk: any, encoding: string, callback: (error?: Error | null, data?: any) => void) {
+            parser.write(chunk);
+            callback();
+          }
+        }));
+    return resultStream;
   }
 
   /**
    * Convert a SPARQL XML boolean response stream to a promise resolving to a boolean.
    * This will reject if the given response was not a valid boolean response.
    * @param {NodeJS.ReadableStream} sparqlResponseStream A SPARQL XML response stream.
-   * @return {NodeJS.ReadableStream} A stream of bindings.
+   * @return {Promise<boolean>} The response boolean.
    */
   public parseXmlBooleanStream(sparqlResponseStream: NodeJS.ReadableStream): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      sparqlResponseStream.on('error', reject);
+      const parser = new SaxesParser();
+      const stack: string[] = [];
+      parser.on("error", reject);
+      parser.on("opentag", tag => {
+        stack.push(tag.name);
+      })
+      parser.on("closetag", _ => {
+        stack.pop();
+      })
+      parser.on("text", text => {
+        if(this.stackEquals(stack, ['sparql', 'boolean'])) {
+          resolve(text === 'true');
+        }
+      })
       sparqlResponseStream
-        .pipe(XmlNode({ strict: true, tag: 'boolean' }))
-        .on('error', reject)
-        .on('data', (node: any) => resolve(node.value === 'true'))
-        .on('end', () => reject(new Error('No valid ASK response was found.')));
+          .on('error', reject)
+          .on('data', d => parser.write(d))
+          .on('end', () => reject(new Error('No valid ASK response was found.')));
     });
   }
 
+  private stackEquals(a: string[], b: string[]) {
+    return a.length === b.length && a.every((v, i) => b[i] === v);
+  }
 }
 
 /**

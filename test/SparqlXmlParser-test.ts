@@ -289,8 +289,7 @@ describe('SparqlXmlParser', () => {
 <?xml version="1.0"?>abc`)))).rejects.toBeTruthy();
     });
 
-    it('should emit an error when an unexpected error occurs in parseXmlBindings', async () => {
-      parser.parseXmlBindings = null;
+    it('should support various kinds of empty bindings', async () => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -305,228 +304,82 @@ describe('SparqlXmlParser', () => {
     <result>
       <binding name="x" />
     </result>
+    <result>
+      <binding />
+    </result>
+    <result></result>
+  </results>
+</sparql>`)))).resolves.toBeTruthy();
+    });
+
+    it('should fail on binding with value but no name', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+    <variable name="hpage"/>
+    <variable name="name"/>
+    <variable name="age"/>
+    <variable name="mbox"/>
+    <variable name="friend"/>
+  </head>
+  <results>
+    <result>
+      <binding><literal></literal></binding>
+    </result>
   </results>
 </sparql>`)))).rejects.toBeTruthy();
-    });
-  });
-
-  describe('#parseXmlBindings', () => {
-    it('should convert bindings with no attributes', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              children: {
-                uri: { value: 'http://example.org/book/book6' },
-              },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({});
-    });
-
-    it('should convert bindings with no children', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book' },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({});
-    });
-
-    it('should convert bindings with no attributes and children', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({});
-    });
-
-    it('should convert bindings with named nodes', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book' },
-              children: {
-                uri: { value: 'http://example.org/book/book6' },
-              },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding))
-        .toEqual({ '?book': DF.namedNode('http://example.org/book/book6') });
-    });
-
-    it('should convert bindings with named nodes without variable prefixing', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book' },
-              children: {
-                uri: { value: 'http://example.org/book/book6' },
-              },
-            },
-          ],
-        },
-      };
-      return expect(new SparqlXmlParser().parseXmlBindings(binding))
-        .toEqual({ book: DF.namedNode('http://example.org/book/book6') });
-    });
-
-    it('should convert bindings with blank nodes', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book' },
-              children: {
-                bnode: { value: 'abc' },
-              },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.blankNode('abc') });
-    });
-
-    it('should convert bindings with literals', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book' },
-              children: {
-                literal: { value: 'abc' },
-              },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.literal('abc') });
-    });
-
-    it('should convert bindings with empty literals', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book' },
-              children: {
-                literal: { value: '' },
-              },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.literal('') });
     });
 
     it('should convert bindings with empty literals', async () => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
-        <sparql xmlns="http://www.w3.org/2005/sparql-results#">
-          <head>
-            <variable name="x"/>
-          </head>
-          <results>
-            <result>
-              <binding name="x">
-                <literal></literal>
-              </binding>
-            </result>
-          </results>
-        </sparql>
-        `))))
-        .toEqual([{ '?x': DF.literal("") }]);
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+        <literal></literal>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`)))).toEqual([{'?x': DF.literal("")}]);
     });
 
-    it('should convert bindings with languaged literals', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book' },
-              children: {
-                literal: { value: 'abc', attribs: { 'xml:lang': 'en-us' } },
-              },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.literal('abc', 'en-us') });
+    it('should fail on invalid term type', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x"><foo>foo</foo></binding>
+    </result>
+  </results>
+</sparql>`)))).rejects.toBeTruthy();
     });
 
-    it('should convert bindings with datatyped literals', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book' },
-              children: {
-                literal: { value: 'abc', attribs: { datatype: 'http://ex' } },
-              },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({ '?book': DF.literal('abc', DF.namedNode('http://ex')) });
-    });
 
-    it('should convert mixed bindings', () => {
-      const binding = {
-        children: {
-          binding: [
-            {
-              attribs: { name: 'book1' },
-              children: {
-                uri: { value: 'http://example.org/book/book6' },
-              },
-            },
-            {
-              attribs: { name: 'book2' },
-              children: {
-                bnode: { value: 'abc' },
-              },
-            },
-            {
-              attribs: { name: 'book3' },
-              children: {
-                literal: { value: 'abc' },
-              },
-            },
-            {
-              attribs: { name: 'book4' },
-              children: {
-                literal: { value: 'abc', attribs: { 'xml:lang': 'en-us' } },
-              },
-            },
-            {
-              attribs: { name: 'book5' },
-              children: {
-                literal: { value: 'abc', attribs: { datatype: 'http://ex' } },
-              },
-            },
-          ],
-        },
-      };
-      return expect(parser.parseXmlBindings(binding)).toEqual({
-        '?book1': DF.namedNode('http://example.org/book/book6'),
-        '?book2': DF.blankNode('abc'),
-        '?book3': DF.literal('abc'),
-        '?book4': DF.literal('abc', 'en-us'),
-        '?book5': DF.literal('abc', DF.namedNode('http://ex')),
-      });
+    it('should not emit prefix question mark if requested', async () => {
+      const customParser = new SparqlXmlParser({ prefixVariableQuestionMark: false });
+      return expect(await arrayifyStream(customParser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+        <literal>foo</literal>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`))))
+     .toEqual([{ 'x': DF.literal('foo') }]);
     });
   });
 
@@ -554,6 +407,13 @@ describe('SparqlXmlParser', () => {
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <boolean>false</boolean>
 </sparql>`))).toEqual(false);
+    });
+
+    it('should reject a results payload', async () => {
+      return expect(parser.parseXmlBooleanStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <results></results>
+</sparql>`))).rejects.toBeTruthy();
     });
 
     it('should reject on an erroring stream', async () => {
