@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.0.0"></a>
+## [v2.0.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.5.0...v2.0.0) - 2022-07-14
+
+This release has been marked as a major change due to the transition from Node's internal `stream` API to `readable-stream`.
+Most users should experience not breakages with this change.
+
+### Changed
+* [Move away from Node.js built-ins](https://github.com/rubensworks/sparqlxml-parse.js/commit/5b4f65556d8ea9ed4450cdcc5ecf5a75b988ac3e)
+* [Enable tree shaking in package.json](https://github.com/rubensworks/sparqlxml-parse.js/commit/2468b763a761ef1e64e07c5c5594cd43425ccaef)
+
 <a name="v1.5.0"></a>
 ## [v1.5.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.4.0...v1.5.0) - 2021-08-11
 
