@@ -33,6 +33,8 @@ export class SparqlXmlParser {
 
     const parser = new SaxesParser();
     const stack: string[] = [];
+    let variablesFound = false;
+    let resultsFound = false;
     const variables: RDF.Variable[] = [];
     let currentBindings: IBindings = {};
     let currentBindingName: string = '';
@@ -43,6 +45,8 @@ export class SparqlXmlParser {
     parser.on("opentag", tag => {
       if(tag.name === "variable" && this.stackEquals(stack,['sparql', 'head'])) {
         variables.push(this.dataFactory.variable(tag.attributes.name));
+      } else if(tag.name === "results" && this.stackEquals(stack, ['sparql'])) {
+        resultsFound = true;
       } else if(tag.name === 'result' && this.stackEquals(stack, ['sparql', 'results'])) {
         currentBindings = {};
       } else if(tag.name === 'binding' && this.stackEquals(stack, ['sparql', 'results', 'result'])) {
@@ -65,6 +69,7 @@ export class SparqlXmlParser {
     parser.on("closetag", tag => {
       if(this.stackEquals(stack, ['sparql', 'head'])) {
         resultStream.emit("variables", variables);
+        variablesFound = true;
       }
       if(this.stackEquals(stack, ['sparql', 'results', 'result'])) {
         resultStream.push(currentBindings);
@@ -92,6 +97,13 @@ export class SparqlXmlParser {
     })
 
     const resultStream = sparqlResponseStream
+        .on("end", _ => {
+          if (!resultsFound) {
+            resultStream.emit("error", new Error("No valid SPARQL query results were found."))
+          } else if (!variablesFound) {
+            resultStream.emit('variables', []);
+          }
+        })
         .pipe(new Transform({
           objectMode: true,
           transform(chunk: any, encoding: string, callback: (error?: Error | null, data?: any) => void) {
