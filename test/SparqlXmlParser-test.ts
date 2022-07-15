@@ -83,18 +83,27 @@ describe('SparqlXmlParser', () => {
     it('should convert an empty SPARQL XML response and emit the variables', async () => {
       const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
-
   <head>
   </head>
-
   <results>
   </results>
-
 </sparql>
 `));
       return expect(new Promise((resolve) => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
       ]);
     });
+
+    it('should convert a very empty SPARQL XML response and emit the variables', async () => {
+      const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <results>
+  </results>
+</sparql>
+`));
+      return expect(new Promise((resolve) => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
+      ]);
+    });
+
 
     it('should convert a SPARQL XML response', async () => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
@@ -284,9 +293,22 @@ describe('SparqlXmlParser', () => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(errorStream))).rejects.toBeTruthy();
     });
 
-    it('should emit an error on an invalid XML response\'', async () => {
+    it('should emit an error on an invalid XML response', async () => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`
 <?xml version="1.0"?>abc`)))).rejects.toBeTruthy();
+    });
+
+    it('should emit an error on a boolean response', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <boolean>false</boolean>
+</sparql>`)))).rejects.toBeTruthy();
+    });
+
+    it('should emit an error on a empty XML', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+</sparql>`)))).rejects.toBeTruthy();
     });
 
     it('should support various kinds of empty bindings', async () => {
