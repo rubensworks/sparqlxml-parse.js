@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.0.1"></a>
+## [v2.0.1](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.0.0...v2.0.1) - 2022-07-15
+
+### Fixed
+* [Ensure variables or error event is emitted](https://github.com/rubensworks/sparqlxml-parse.js/commit/46f6c89526d55c0cbceae72a4521e350f6a8ca6f)
+
 <a name="v2.0.0"></a>
 ## [v2.0.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v1.5.0...v2.0.0) - 2022-07-14
 
