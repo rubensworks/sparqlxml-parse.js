@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.0.2"></a>
+## [v2.0.2](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.0.1...v2.0.2) - 2022-11-09
+
+### Fixed
+* [Include source map files in packed files](https://github.com/rubensworks/sparqlxml-parse.js/commit/82acf50024999a1770061964be52d8f98283da7e)
+
 <a name="v2.0.1"></a>
 ## [v2.0.1](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.0.0...v2.0.1) - 2022-07-15
 
