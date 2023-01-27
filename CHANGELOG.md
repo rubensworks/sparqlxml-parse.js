@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.1.0"></a>
+## [v2.1.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.0.2...v2.1.0) - 2023-01-27
+
+### Added
+* [Parse quoted RDF-star triples](https://github.com/rubensworks/sparqlxml-parse.js/commit/da3d7a3ece8ac0565c88463454b61f1ee8b3729a)
+
 <a name="v2.0.2"></a>
 ## [v2.0.2](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.0.1...v2.0.2) - 2022-11-09
 
