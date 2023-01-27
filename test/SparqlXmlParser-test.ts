@@ -202,6 +202,276 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
+    it('should convert a SPARQL XML response with a single quoted triple binding', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+              <uri>http://example.org/alice</uri>
+          </subject>
+          <predicate>
+              <uri>http://example.org/name</uri>
+          </predicate>
+          <object>
+              <literal datatype='http://example.org/Type'>Alice</literal>
+          </object>
+        </triple>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`))))
+        .toEqual([
+          { '?x': DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))) },
+        ]);
+    });
+
+    it('should convert a SPARQL XML response with a single nested quoted triple binding in subject', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+            <triple>
+              <subject>
+                  <uri>http://example.org/alice</uri>
+              </subject>
+              <predicate>
+                  <uri>http://example.org/name</uri>
+              </predicate>
+              <object>
+                  <literal datatype='http://example.org/Type'>Alice</literal>
+              </object>
+            </triple>
+          </subject>
+          <predicate>
+              <uri>http://example.org/sayedBy</uri>
+          </predicate>
+          <object>
+              <uri>http://example.org/alice</uri>
+          </object>
+        </triple>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`))))
+        .toEqual([
+          { '?x': DF.quad(
+              DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))),
+              DF.namedNode('http://example.org/sayedBy'),
+              DF.namedNode('http://example.org/alice'),
+            ) },
+        ]);
+    });
+
+    it('should convert a SPARQL XML response with multiple nested quoted triple bindings in subject', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+            <triple>
+              <subject>
+                  <uri>http://example.org/alice</uri>
+              </subject>
+              <predicate>
+                  <uri>http://example.org/name</uri>
+              </predicate>
+              <object>
+                  <literal datatype='http://example.org/Type'>Alice</literal>
+              </object>
+            </triple>
+          </subject>
+          <predicate>
+              <uri>http://example.org/sayedBy</uri>
+          </predicate>
+          <object>
+              <uri>http://example.org/alice</uri>
+          </object>
+        </triple>
+      </binding>
+      <binding name="y">
+	      <triple>
+          <subject>
+            <triple>
+              <subject>
+                  <uri>http://example.org/bob</uri>
+              </subject>
+              <predicate>
+                  <uri>http://example.org/name</uri>
+              </predicate>
+              <object>
+                  <literal datatype='http://example.org/Type'>Bob</literal>
+              </object>
+            </triple>
+          </subject>
+          <predicate>
+              <uri>http://example.org/sayedBy</uri>
+          </predicate>
+          <object>
+              <uri>http://example.org/bob</uri>
+          </object>
+        </triple>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`))))
+        .toEqual([
+          {
+            '?x': DF.quad(
+              DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))),
+              DF.namedNode('http://example.org/sayedBy'),
+              DF.namedNode('http://example.org/alice'),
+            ),
+            '?y': DF.quad(
+              DF.quad(DF.namedNode('http://example.org/bob'), DF.namedNode('http://example.org/name'), DF.literal('Bob', DF.namedNode('http://example.org/Type'))),
+              DF.namedNode('http://example.org/sayedBy'),
+              DF.namedNode('http://example.org/bob'),
+            ),
+          },
+        ]);
+    });
+
+    it('should convert a SPARQL XML response with multiple results with nested triples', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+            <triple>
+              <subject>
+                  <uri>http://example.org/alice</uri>
+              </subject>
+              <predicate>
+                  <uri>http://example.org/name</uri>
+              </predicate>
+              <object>
+                  <literal datatype='http://example.org/Type'>Alice</literal>
+              </object>
+            </triple>
+          </subject>
+          <predicate>
+              <uri>http://example.org/sayedBy</uri>
+          </predicate>
+          <object>
+              <uri>http://example.org/alice</uri>
+          </object>
+        </triple>
+      </binding>
+    </result>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+            <triple>
+              <subject>
+                  <uri>http://example.org/bob</uri>
+              </subject>
+              <predicate>
+                  <uri>http://example.org/name</uri>
+              </predicate>
+              <object>
+                  <literal datatype='http://example.org/Type'>Bob</literal>
+              </object>
+            </triple>
+          </subject>
+          <predicate>
+              <uri>http://example.org/sayedBy</uri>
+          </predicate>
+          <object>
+              <uri>http://example.org/bob</uri>
+          </object>
+        </triple>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`))))
+        .toEqual([
+          {
+            '?x': DF.quad(
+              DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))),
+              DF.namedNode('http://example.org/sayedBy'),
+              DF.namedNode('http://example.org/alice'),
+            ),
+          },
+          {
+            '?x': DF.quad(
+              DF.quad(DF.namedNode('http://example.org/bob'), DF.namedNode('http://example.org/name'), DF.literal('Bob', DF.namedNode('http://example.org/Type'))),
+              DF.namedNode('http://example.org/sayedBy'),
+              DF.namedNode('http://example.org/bob'),
+            ),
+          }
+        ]);
+    });
+
+    it('should convert a SPARQL XML response with a single nested quoted triple binding in object', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+              <uri>http://example.org/alice</uri>
+          </subject>
+          <predicate>
+              <uri>http://example.org/says</uri>
+          </predicate>
+          <object>
+            <triple>
+              <subject>
+                  <uri>http://example.org/alice</uri>
+              </subject>
+              <predicate>
+                  <uri>http://example.org/name</uri>
+              </predicate>
+              <object>
+                  <literal datatype='http://example.org/Type'>Alice</literal>
+              </object>
+            </triple>
+          </object>
+        </triple>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`))))
+        .toEqual([
+          { '?x': DF.quad(
+              DF.namedNode('http://example.org/alice'),
+              DF.namedNode('http://example.org/says'),
+              DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))),
+            ) },
+        ]);
+    });
+
     it('should convert a SPARQL XML response with an empty result', async () => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
@@ -402,6 +672,85 @@ describe('SparqlXmlParser', () => {
 </sparql>
 `))))
      .toEqual([{ 'x': DF.literal('foo') }]);
+    });
+
+    it('should throw on an illegal triple sub-tag', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+              <uri>http://example.org/alice</uri>
+          </subject>
+          <predicate>
+              <uri>http://example.org/name</uri>
+          </predicate>
+          <object>
+              <literal datatype='http://example.org/Type'>Alice</literal>
+          </object>
+          <illegal></illegal>
+        </triple>
+      </binding>
+    </result>
+  </results>
+</sparql>`)))).rejects.toThrow(`Illegal quoted triple component 'illegal' found on line 20`);
+    });
+
+    it('should throw on an incomplete triple', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+              <uri>http://example.org/alice</uri>
+          </subject>
+          <predicate>
+              <uri>http://example.org/name</uri>
+          </predicate>
+        </triple>
+      </binding>
+    </result>
+  </results>
+</sparql>`)))).rejects.toThrow(`Incomplete quoted triple on line 17`);
+    });
+
+    it('should throw on an multiple sub-tags in triple', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="x"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <triple>
+          <subject>
+              <uri>http://example.org/alice</uri>
+          </subject>
+          <predicate>
+              <uri>http://example.org/name</uri>
+          </predicate>
+          <predicate>
+              <uri>http://example.org/name2</uri>
+          </predicate>
+          <object>
+              <literal datatype='http://example.org/Type'>Alice</literal>
+          </object>
+        </triple>
+      </binding>
+    </result>
+  </results>
+</sparql>`)))).rejects.toThrow(`The predicate in a quoted triple on line 18 was already defined before`);
     });
   });
 

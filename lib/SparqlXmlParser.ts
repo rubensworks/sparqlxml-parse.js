@@ -41,6 +41,7 @@ export class SparqlXmlParser {
     let currentBindingType: string = '';
     let currentBindingAnnotation: string | RDF.NamedNode | undefined;
     let currentText: string = '';
+    let currentQuotedTriples: { currentComponent?: 'subject' | 'predicate' | 'object'; components: { subject?: RDF.Term; predicate?: RDF.Term; object?: RDF.Term } }[] = [];
     parser.on("error", errorListener);
     parser.on("opentag", tag => {
       if(tag.name === "variable" && this.stackEquals(stack,['sparql', 'head'])) {
@@ -54,7 +55,19 @@ export class SparqlXmlParser {
         currentBindingType = '';
         currentBindingAnnotation = '';
         currentText = '';
-      } else if(this.stackEquals(stack, ['sparql', 'results', 'result', 'binding'])) {
+        currentQuotedTriples = [];
+      } else if(tag.name === 'triple' && this.stackBeginsWith(stack, ['sparql', 'results', 'result'])) {
+        currentQuotedTriples.push({ components: {} });
+      } else if (stack[stack.length - 1] === 'triple' && this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding'])) {
+        currentBindingType = '';
+        currentBindingAnnotation = '';
+        currentText = '';
+        if (!['subject', 'predicate', 'object'].includes(tag.name)) {
+          errorListener(new Error(`Illegal quoted triple component '${tag.name}' found on line ${parser.line + 1}`));
+        } else {
+          currentQuotedTriples[currentQuotedTriples.length - 1].currentComponent = <any>tag.name;
+        }
+      } else if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding'])) {
         currentBindingType = tag.name;
         if('xml:lang' in tag.attributes) {
           currentBindingAnnotation = tag.attributes['xml:lang'];
@@ -74,24 +87,53 @@ export class SparqlXmlParser {
       if(this.stackEquals(stack, ['sparql', 'results', 'result'])) {
         resultStream.push(currentBindings);
       }
-      if(this.stackEquals(stack, ['sparql', 'results', 'result', 'binding'])) {
-        const key = this.prefixVariableQuestionMark ? ('?' + currentBindingName) : currentBindingName;
+      if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding'])) {
+        // Determine current RDF term value
+        let term: RDF.Term | undefined;
         if(!currentBindingName && currentBindingType) {
           errorListener(new Error(`Terms should have a name on line ${parser.line + 1}`));
         } else if(currentBindingType === 'uri') {
-          currentBindings[key] = this.dataFactory.namedNode(currentText);
+          term = this.dataFactory.namedNode(currentText);
         } else if(currentBindingType === 'bnode') {
-          currentBindings[key] = this.dataFactory.blankNode(currentText);
+          term = this.dataFactory.blankNode(currentText);
         } else if (currentBindingType === 'literal') {
-          currentBindings[key] = this.dataFactory.literal(currentText, currentBindingAnnotation);
+          term = this.dataFactory.literal(currentText, currentBindingAnnotation);
+        } else if (stack[stack.length - 1] === 'triple') {
+          const currentQuotedTriple = currentQuotedTriples.pop();
+          if (currentQuotedTriple && currentQuotedTriple.components.subject && currentQuotedTriple.components.predicate && currentQuotedTriple.components.object) {
+            term = this.dataFactory.quad(
+              <RDF.Quad_Subject> currentQuotedTriple.components.subject,
+              <RDF.Quad_Predicate> currentQuotedTriple.components.predicate,
+              <RDF.Quad_Object> currentQuotedTriple.components.object,
+            );
+          } else {
+            errorListener(new Error(`Incomplete quoted triple on line ${parser.line + 1}`));
+          }
         } else if(currentBindingType) {
           errorListener(new Error(`Invalid term type '${currentBindingType}' on line ${parser.line + 1}`));
         }
+
+        if (term) {
+          if (currentQuotedTriples.length > 0) {
+            // If we're in a quoted triple, store the term inside the active quoted triple
+            const currentQuotedTriple = currentQuotedTriples[currentQuotedTriples.length - 1];
+            if (currentQuotedTriple.components[currentQuotedTriple.currentComponent]) {
+              errorListener(new Error(`The ${currentQuotedTriple.currentComponent} in a quoted triple on line ${parser.line + 1} was already defined before`));
+            }
+            currentQuotedTriple.components[currentQuotedTriple.currentComponent] = term;
+          } else {
+            // Store the value in the current bindings object
+            const key = this.prefixVariableQuestionMark ? ('?' + currentBindingName) : currentBindingName;
+            currentBindings[key] = term;
+          }
+        }
+
+        currentBindingType = undefined;
       }
       stack.pop();
     })
     parser.on("text", text => {
-      if(this.stackEquals(stack, ['sparql', 'results', 'result', 'binding', currentBindingType])) {
+      if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding']) && stack[stack.length - 1] === currentBindingType) {
         currentText = text;
       }
     })
@@ -145,6 +187,10 @@ export class SparqlXmlParser {
 
   private stackEquals(a: string[], b: string[]) {
     return a.length === b.length && a.every((v, i) => b[i] === v);
+  }
+
+  private stackBeginsWith(a: string[], b: string[]) {
+    return a.length >= b.length && b.every((v, i) => a[i] === v);
   }
 }
 

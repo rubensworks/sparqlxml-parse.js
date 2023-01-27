@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/sparqlxml-parse.svg)](https://www.npmjs.com/package/sparqlxml-parse)
 
 A utility package that allows you to parse [SPARQL XML](https://www.w3.org/TR/rdf-sparql-XMLres/) results
-in a convenient [RDFJS](http://rdf.js.org/)-based datastructure.
+in a convenient [RDF/JS](http://rdf.js.org/)-based datastructure.
 
 For example, the following SPARQL XML result can be converted as follows:
 
@@ -42,6 +42,21 @@ In:
 	      <uri>http://example.org/book/book5</uri>
       </binding>
     </result>
+    <result>
+      <binding name="book">
+        <triple>
+          <subject>
+            <uri>http://example.org/bob</uri>
+          </subject>
+          <predicate>
+            <uri>http://example.org/name</uri>
+          </predicate>
+          <object>
+            <literal datatype='http://example.org/Type'>Bob</literal>
+          </object>
+        </triple>
+      </binding>
+    </result>
   </results>
 </sparql>
 ```
@@ -53,11 +68,12 @@ Out:
   { '?book': namedNode('http://example.org/book/book2') },
   { '?book': namedNode('http://example.org/book/book3') },
   { '?book': namedNode('http://example.org/book/book4') },
-  { '?book': namedNode('http://example.org/book/book5') },
+  { '?book': namedNode('http://example.org/book/book5') }, 
+  { '?book': quad(namedNode('http://example.org/bob'), namedNode('http://example.org/name'), literal('Bob', namedNode('http://example.org/Type'))) },
 ]
 ```
 
-Where `namedNode` is an RDFJS named node.
+Where `namedNode` is an RDF/JS named node, `quad` is an RDF/JS quad/triple, and `literal` is an RDF/JS literal.
 
 This library automatically converts all SPARQL XML result values to their respective RDFJS type.
 
