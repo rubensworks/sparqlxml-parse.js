@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.1.1"></a>
+## [v2.1.1](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.1.0...v2.1.1) - 2023-06-05
+
+### Fixed
+* [Migrate to @rubensworks/saxes](https://github.com/rubensworks/sparqlxml-parse.js/commit/370c8e3e0073dd3602338e66181d148be06dbe34)
+    This fixes compilation errors on TypeScript 5
+
 <a name="v2.1.0"></a>
 ## [v2.1.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.0.2...v2.1.0) - 2023-01-27
 
