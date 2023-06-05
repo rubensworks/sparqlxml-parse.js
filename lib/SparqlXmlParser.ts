@@ -1,6 +1,6 @@
 import {DataFactory} from "rdf-data-factory";
 import * as RDF from "@rdfjs/types";
-import {SaxesParser} from "saxes";
+import {SaxesParser} from "@rubensworks/saxes";
 import {Transform} from "readable-stream";
 
 /**
