@@ -132,6 +132,11 @@ export class SparqlXmlParser {
       }
       stack.pop();
     })
+    parser.on("cdata", text => {
+      if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding']) && stack[stack.length - 1] === currentBindingType) {
+        currentText = text;
+      }
+    })
     parser.on("text", text => {
       if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding']) && stack[stack.length - 1] === currentBindingType) {
         currentText = text;
