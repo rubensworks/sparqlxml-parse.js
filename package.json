@@ -91,7 +91,7 @@
     "@types/readable-stream": "^2.3.13",
     "buffer": "^6.0.3",
     "rdf-data-factory": "^1.1.0",
-    "readable-stream": "^4.0.0",
+    "readable-stream": "^4.5.2",
     "@rubensworks/saxes": "^6.0.1"
   },
   "sideEffects": false
