@@ -39,7 +39,7 @@ export class SparqlXmlParser {
     let currentBindings: IBindings = {};
     let currentBindingName: string = '';
     let currentBindingType: string = '';
-    let currentBindingAnnotation: string | RDF.NamedNode | undefined;
+    let currentBindingAnnotation: { language: string, direction?: 'ltr' | 'rtl' } | RDF.NamedNode | undefined;
     let currentText: string = '';
     let currentQuotedTriples: { currentComponent?: 'subject' | 'predicate' | 'object'; components: { subject?: RDF.Term; predicate?: RDF.Term; object?: RDF.Term } }[] = [];
     parser.on("error", errorListener);
@@ -53,14 +53,14 @@ export class SparqlXmlParser {
       } else if(tag.name === 'binding' && this.stackEquals(stack, ['sparql', 'results', 'result'])) {
         currentBindingName = tag.attributes.name || '';
         currentBindingType = '';
-        currentBindingAnnotation = '';
+        currentBindingAnnotation = undefined;
         currentText = '';
         currentQuotedTriples = [];
       } else if(tag.name === 'triple' && this.stackBeginsWith(stack, ['sparql', 'results', 'result'])) {
         currentQuotedTriples.push({ components: {} });
       } else if (stack[stack.length - 1] === 'triple' && this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding'])) {
         currentBindingType = '';
-        currentBindingAnnotation = '';
+        currentBindingAnnotation = undefined;
         currentText = '';
         if (!['subject', 'predicate', 'object'].includes(tag.name)) {
           errorListener(new Error(`Illegal quoted triple component '${tag.name}' found on line ${parser.line + 1}`));
@@ -70,7 +70,10 @@ export class SparqlXmlParser {
       } else if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding'])) {
         currentBindingType = tag.name;
         if('xml:lang' in tag.attributes) {
-          currentBindingAnnotation = tag.attributes['xml:lang'];
+          currentBindingAnnotation = {
+            language: tag.attributes['xml:lang'],
+            direction: <'ltr' | 'rtl' | undefined> tag.attributes['its:dir'],
+          };
         } else if('datatype' in tag.attributes) {
           currentBindingAnnotation = this.dataFactory.namedNode(tag.attributes.datatype);
         } else {

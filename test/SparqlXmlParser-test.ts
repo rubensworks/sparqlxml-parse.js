@@ -182,6 +182,85 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
+    it('should convert a SPARQL XML response with directions', async () => {
+      return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#"
+  xmlns:its="http://www.w3.org/2005/11/its" 
+  its:version="2.0">
+  <head>
+    <variable name="x"/>
+    <variable name="hpage"/>
+    <variable name="name"/>
+    <variable name="nickname"/>
+    <variable name="age"/>
+    <variable name="mbox"/>
+    <variable name="friend"/>
+  </head>
+  <results>
+    <result>
+      <binding name="x">
+	      <bnode>r1</bnode>
+      </binding>
+      <binding name="hpage">
+	      <uri>http://work.example.org/bob1/</uri>
+      </binding>
+      <binding name="name">
+	      <literal xml:lang="en" its:dir="ltr">Bob1</literal>
+      </binding>
+      <binding name="nickname">
+	      <literal>Bobby1</literal>
+      </binding>
+      <binding name="age">
+	      <literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal>
+      </binding>
+      <binding name="mbox">
+	      <uri>mailto:bob1@work.example.org</uri>
+      </binding>
+    </result>
+
+    <result>
+      <binding name="x">
+	      <bnode>r2</bnode>
+      </binding>
+      <binding name="hpage">
+	      <uri>http://work.example.org/bob2/</uri>
+      </binding>
+      <binding name="name">
+	      <literal xml:lang="en" its:dir="rtl">Bob2</literal>
+      </binding>
+      <binding name="nickname">
+	      <literal>Bobby2</literal>
+      </binding>
+      <binding name="age">
+	      <literal datatype="http://www.w3.org/2001/XMLSchema#integer">2</literal>
+      </binding>
+      <binding name="mbox">
+	      <uri>mailto:bob2@work.example.org</uri>
+      </binding>
+    </result>
+  </results>
+</sparql>
+`))))
+        .toEqual([
+          {
+            '?age': DF.literal('1', DF.namedNode('http://www.w3.org/2001/XMLSchema#integer')),
+            '?hpage': DF.namedNode('http://work.example.org/bob1/'),
+            '?mbox': DF.namedNode('mailto:bob1@work.example.org'),
+            '?name': DF.literal('Bob1', { language: 'en', direction: 'ltr' }),
+            '?nickname': DF.literal('Bobby1'),
+            '?x': DF.blankNode('r1'),
+          },
+          {
+            '?age': DF.literal('2', DF.namedNode('http://www.w3.org/2001/XMLSchema#integer')),
+            '?hpage': DF.namedNode('http://work.example.org/bob2/'),
+            '?mbox': DF.namedNode('mailto:bob2@work.example.org'),
+            '?name': DF.literal('Bob2', { language: 'en', direction: 'rtl' }),
+            '?nickname': DF.literal('Bobby2'),
+            '?x': DF.blankNode('r2'),
+          },
+        ]);
+    });
+
     it('should convert a SPARQL XML response with a single binding', async () => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
