@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v3.0.0"></a>
+## [v3.0.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.1.1...v3.0.0) - 2025-01-08
+
+### BREAKING CHANGES
+* [Update to rdf-data-factory v2](https://github.com/rubensworks/sparqlxml-parse.js/commit/ae95b61dc7dd125d814a97116115031792fabd91)
+    This includes a bump to @rdfjs/types@2.0.0, which requires TypeScript 5 and Node 14+
+
+### Added
+* [Add optional direction for literals](https://github.com/rubensworks/sparqlxml-parse.js/commit/6ec8e44f25cf7c3b3b3675a90ca0959ecc2c5ba3)
+
+### Fixed
+* [Bump readable-stream to fix Buffer undefined in browsers](https://github.com/rubensworks/sparqlxml-parse.js/commit/1df5d1c03b64f586bd381f32c8e5c3b3c999f97f)
+
 <a name="v2.1.1"></a>
 ## [v2.1.1](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.1.0...v2.1.1) - 2023-06-05
 
