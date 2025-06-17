@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v3.1.0"></a>
+## [v3.1.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v3.0.0...v3.1.0) - 2025-06-17
+
+### Added
+* [Parse version and link head elements](https://github.com/rubensworks/sparqlxml-parse.js/commit/3a42175ad5eb68cf8aaaef65e20dca83f714c483)
+
 <a name="v3.0.0"></a>
 ## [v3.0.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v2.1.1...v3.0.0) - 2025-01-08
 
