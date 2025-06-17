@@ -119,11 +119,12 @@ sparqlXmlParser.parseXmlResultsStream(sparqlJsonResponseStream)
 // This will output [ { '?book': namedNode('http://example.org/book/book1') } ]
 ```
 
-Optionally, you can also retrieve the variables inside the `head`
-as follows by listening to the `variables` event:
+Optionally, you can also retrieve the variables inside the `head` and the version
+as follows by listening to the `'variables'` and `'version'` events:
 ```javascript
 sparqlXmlParser.parseXmlResultsStream(sparqlJsonResponseStream)
     .on('variables', (variables: RDF.Variable[]) => console.log(variables))
+    .on('version', (version: string) => console.log(version))
     .on('data', (bindings: IBindings) => { return; });
 // This will output [ variable('book') ]
 ```

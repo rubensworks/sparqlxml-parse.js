@@ -79,6 +79,8 @@ export class SparqlXmlParser {
         } else {
           currentBindingAnnotation = undefined;
         }
+      } else if (tag.name === 'sparql' && tag.attributes.version) {
+        resultStream.emit('version', tag.attributes.version);
       }
       stack.push(tag.name);
     })

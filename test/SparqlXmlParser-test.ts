@@ -104,6 +104,18 @@ describe('SparqlXmlParser', () => {
       ]);
     });
 
+    it('should convert an empty SPARQL XML response and emit the version', async () => {
+      const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#" version="1.2">
+  <head>
+  </head>
+  <results>
+  </results>
+</sparql>
+`));
+      return expect(new Promise((resolve) => stream.on('version', resolve))).resolves.toBe('1.2');
+    });
+
 
     it('should convert a SPARQL XML response', async () => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
