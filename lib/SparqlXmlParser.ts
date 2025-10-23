@@ -9,13 +9,21 @@ import {Transform} from "readable-stream";
  */
 export class SparqlXmlParser {
 
+  public static SUPPORTED_VERSIONS: string[] = [
+    '1.2',
+    '1.2-basic',
+    '1.1',
+  ];
+
   private readonly dataFactory: RDF.DataFactory;
   private readonly prefixVariableQuestionMark?: boolean;
+  private readonly parseUnsupportedVersions: boolean;
 
   constructor(settings?: ISettings) {
     settings = settings || {};
     this.dataFactory = settings.dataFactory || new DataFactory();
     this.prefixVariableQuestionMark = !!settings.prefixVariableQuestionMark;
+    this.parseUnsupportedVersions = !!settings.parseUnsupportedVersions;
   }
 
   /**
@@ -80,6 +88,9 @@ export class SparqlXmlParser {
           currentBindingAnnotation = undefined;
         }
       } else if (tag.name === 'sparql' && tag.attributes.version) {
+        if (!this.parseUnsupportedVersions && !SparqlXmlParser.SUPPORTED_VERSIONS.includes(tag.attributes.version)) {
+          resultStream.emit("error", new Error(`Detected unsupported version: ${tag.attributes.version}`));
+        }
         resultStream.emit('version', tag.attributes.version);
       }
       stack.push(tag.name);
@@ -211,6 +222,10 @@ export interface ISettings {
    * If variable names should be prefixed with a quotation mark.
    */
   prefixVariableQuestionMark?: boolean;
+  /**
+   * If no error should be emitted on unsupported versions.
+   */
+  parseUnsupportedVersions?: boolean;
 }
 
 /**

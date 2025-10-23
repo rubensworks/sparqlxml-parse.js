@@ -116,6 +116,16 @@ describe('SparqlXmlParser', () => {
       return expect(new Promise((resolve) => stream.on('version', resolve))).resolves.toBe('1.2');
     });
 
+    it('should throw on an unknown SPARQL version', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#" version="1.2-unknown">
+  <head>
+  </head>
+  <results>
+  </results>
+</sparql>`)))).rejects.toThrow(`Detected unsupported version: 1.2-unknown`);
+    });
+
 
     it('should convert a SPARQL XML response', async () => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>

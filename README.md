@@ -129,6 +129,9 @@ sparqlXmlParser.parseXmlResultsStream(sparqlJsonResponseStream)
 // This will output [ variable('book') ]
 ```
 
+The error thrown for unsupported versions can be skipped
+by setting `parseUnsupportedVersions` to `true` when constructing the parser.
+
 ### Convert a SPARQL XML boolean response stream
 
 ```javascript
