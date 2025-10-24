@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v3.3.0"></a>
+## [v3.3.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v3.2.0...v3.3.0) - 2025-10-24
+
+### Added
+* [Accept and validate version as media type parameter](https://github.com/rubensworks/sparqlxml-parse.js/commit/19d9894dc21b09f70f991669f45ff1847bac741e)
+
 <a name="v3.2.0"></a>
 ## [v3.2.0](https://github.com/rubensworks/sparqlxml-parse.js/compare/v3.1.0...v3.2.0) - 2025-10-23
 
