@@ -27,15 +27,24 @@ export class SparqlXmlParser {
   }
 
   /**
+   * If the given version is valid for this parser to handle.
+   * @param version A version string.
+   */
+  public isValidVersion(version: string): boolean {
+    return this.parseUnsupportedVersions || SparqlXmlParser.SUPPORTED_VERSIONS.includes(version);
+  }
+
+  /**
    * Convert a SPARQL XML bindings response stream to a stream of bindings objects.
    *
    * The bindings stream will emit a 'variables' event that will contain
    * the array of variables (as RDF.Variable[]), as defined in the response head.
    *
    * @param {NodeJS.ReadableStream} sparqlResponseStream A SPARQL XML response stream.
+   * @param version The version that was supplied as a media type parameter
    * @return {NodeJS.ReadableStream} A stream of bindings.
    */
-  public parseXmlResultsStream(sparqlResponseStream: NodeJS.ReadableStream): NodeJS.ReadableStream {
+  public parseXmlResultsStream(sparqlResponseStream: NodeJS.ReadableStream, version?: string): NodeJS.ReadableStream {
     const errorListener = (error: Error) => resultStream.emit('error', error);
     sparqlResponseStream.on('error', errorListener);
 
@@ -88,7 +97,7 @@ export class SparqlXmlParser {
           currentBindingAnnotation = undefined;
         }
       } else if (tag.name === 'sparql' && tag.attributes.version) {
-        if (!this.parseUnsupportedVersions && !SparqlXmlParser.SUPPORTED_VERSIONS.includes(tag.attributes.version)) {
+        if (!this.isValidVersion(tag.attributes.version)) {
           resultStream.emit("error", new Error(`Detected unsupported version: ${tag.attributes.version}`));
         }
         resultStream.emit('version', tag.attributes.version);
@@ -169,6 +178,11 @@ export class SparqlXmlParser {
             callback();
           }
         }));
+
+    if (version && !this.isValidVersion(version)) {
+      resultStream.destroy(new Error(`Detected unsupported version as media type parameter: ${version}`));
+    }
+
     return resultStream;
   }
 
@@ -176,9 +190,13 @@ export class SparqlXmlParser {
    * Convert a SPARQL XML boolean response stream to a promise resolving to a boolean.
    * This will reject if the given response was not a valid boolean response.
    * @param {NodeJS.ReadableStream} sparqlResponseStream A SPARQL XML response stream.
+   * @param version The version that was supplied as a media type parameter
    * @return {Promise<boolean>} The response boolean.
    */
-  public parseXmlBooleanStream(sparqlResponseStream: NodeJS.ReadableStream): Promise<boolean> {
+  public parseXmlBooleanStream(sparqlResponseStream: NodeJS.ReadableStream, version?: string): Promise<boolean> {
+    if (version && !this.isValidVersion(version)) {
+      return Promise.reject(new Error(`Detected unsupported version as media type parameter: ${version}`));
+    }
     return new Promise((resolve, reject) => {
       const parser = new SaxesParser();
       const stack: string[] = [];

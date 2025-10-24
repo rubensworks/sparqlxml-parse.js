@@ -126,6 +126,15 @@ describe('SparqlXmlParser', () => {
 </sparql>`)))).rejects.toThrow(`Detected unsupported version: 1.2-unknown`);
     });
 
+    it('should throw on an unsupported media type version', async () => {
+      return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+  </head>
+  <results>
+  </results>
+</sparql>`), '1.2-unknown'))).rejects.toThrow(`Detected unsupported version as media type parameter: 1.2-unknown`);
+    });
 
     it('should convert a SPARQL XML response', async () => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
@@ -865,6 +874,13 @@ describe('SparqlXmlParser', () => {
     it('should reject on an invalid SPARQL XML response', async () => {
       return expect(parser.parseXmlBooleanStream(streamifyString(`
 <?xml version="1.0"?>abc`))).rejects.toBeTruthy();
+    });
+
+    it('should throw on an unsupported media type version', async () => {
+      return await expect(parser.parseXmlBooleanStream(streamifyString(`<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <boolean>true</boolean>
+</sparql>`), '1.2-unknown')).rejects.toThrow(`Detected unsupported version as media type parameter: 1.2-unknown`);
     });
 
     it('should convert a true SPARQL XML boolean response', async () => {
