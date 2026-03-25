@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "types": ["node", "jest"],
     "noImplicitAny": false,
+    "strictNullChecks": false,
     "lib": [
       "es6"
     ]
