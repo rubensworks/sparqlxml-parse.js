@@ -1,16 +1,16 @@
-import {DataFactory} from "rdf-data-factory";
-import "jest-rdf";
-import {PassThrough} from "stream";
-import {SparqlXmlParser} from "../lib/SparqlXmlParser";
+import { PassThrough } from 'node:stream';
 import arrayifyStream from 'arrayify-stream';
+import 'jest-rdf';
+import { DataFactory } from 'rdf-data-factory';
+import { SparqlXmlParser } from '../lib/SparqlXmlParser';
+
 const streamifyString = require('streamify-string');
 
 const DF = new DataFactory();
 
-// tslint:disable:no-trailing-whitespace
+// Tslint:disable:no-trailing-whitespace
 
 describe('SparqlXmlParser', () => {
-
   describe('constructed without options', () => {
     const optionlessInstance = new SparqlXmlParser();
 
@@ -51,7 +51,7 @@ describe('SparqlXmlParser', () => {
     });
 
     it('should have the default data factory', () => {
-      return expect((<any> optionsInstance).dataFactory).toEqual('abc');
+      return expect((<any> optionsInstance).dataFactory).toBe('abc');
     });
 
     it('should not prefix variables with a question mark', () => {
@@ -66,7 +66,7 @@ describe('SparqlXmlParser', () => {
   });
 
   describe('#parseXmlResultsStream', () => {
-    it('should convert an empty SPARQL XML response', async () => {
+    it('should convert an empty SPARQL XML response', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
 
@@ -80,7 +80,7 @@ describe('SparqlXmlParser', () => {
 `)))).toEqual([]);
     });
 
-    it('should convert an empty SPARQL XML response and emit the variables', async () => {
+    it('should convert an empty SPARQL XML response and emit the variables', async() => {
       const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -89,22 +89,22 @@ describe('SparqlXmlParser', () => {
   </results>
 </sparql>
 `));
-      return expect(new Promise((resolve) => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
+      return expect(new Promise(resolve => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
       ]);
     });
 
-    it('should convert a very empty SPARQL XML response and emit the variables', async () => {
+    it('should convert a very empty SPARQL XML response and emit the variables', async() => {
       const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <results>
   </results>
 </sparql>
 `));
-      return expect(new Promise((resolve) => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
+      return expect(new Promise(resolve => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
       ]);
     });
 
-    it('should convert an empty SPARQL XML response and emit the version', async () => {
+    it('should convert an empty SPARQL XML response and emit the version', async() => {
       const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#" version="1.2">
   <head>
@@ -113,10 +113,10 @@ describe('SparqlXmlParser', () => {
   </results>
 </sparql>
 `));
-      return expect(new Promise((resolve) => stream.on('version', resolve))).resolves.toBe('1.2');
+      return expect(new Promise(resolve => stream.on('version', resolve))).resolves.toBe('1.2');
     });
 
-    it('should throw on an unknown SPARQL version', async () => {
+    it('should throw on an unknown SPARQL version', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#" version="1.2-unknown">
   <head>
@@ -126,7 +126,7 @@ describe('SparqlXmlParser', () => {
 </sparql>`)))).rejects.toThrow(`Detected unsupported version: 1.2-unknown`);
     });
 
-    it('should throw on an unsupported media type version', async () => {
+    it('should throw on an unsupported media type version', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -136,7 +136,7 @@ describe('SparqlXmlParser', () => {
 </sparql>`), '1.2-unknown'))).rejects.toThrow(`Detected unsupported version as media type parameter: 1.2-unknown`);
     });
 
-    it('should convert a SPARQL XML response', async () => {
+    it('should convert a SPARQL XML response', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -151,43 +151,43 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <bnode>r1</bnode>
+        <bnode>r1</bnode>
       </binding>
       <binding name="hpage">
-	      <uri>http://work.example.org/bob1/</uri>
+        <uri>http://work.example.org/bob1/</uri>
       </binding>
       <binding name="name">
-	      <literal xml:lang="en">Bob1</literal>
+        <literal xml:lang="en">Bob1</literal>
       </binding>
       <binding name="nickname">
-	      <literal>Bobby1</literal>
+        <literal>Bobby1</literal>
       </binding>
       <binding name="age">
-	      <literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal>
+        <literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal>
       </binding>
       <binding name="mbox">
-	      <uri>mailto:bob1@work.example.org</uri>
+        <uri>mailto:bob1@work.example.org</uri>
       </binding>
     </result>
 
     <result>
       <binding name="x">
-	      <bnode>r2</bnode>
+        <bnode>r2</bnode>
       </binding>
       <binding name="hpage">
-	      <uri>http://work.example.org/bob2/</uri>
+        <uri>http://work.example.org/bob2/</uri>
       </binding>
       <binding name="name">
-	      <literal xml:lang="en">Bob2</literal>
+        <literal xml:lang="en">Bob2</literal>
       </binding>
       <binding name="nickname">
-	      <literal>Bobby2</literal>
+        <literal>Bobby2</literal>
       </binding>
       <binding name="age">
-	      <literal datatype="http://www.w3.org/2001/XMLSchema#integer">2</literal>
+        <literal datatype="http://www.w3.org/2001/XMLSchema#integer">2</literal>
       </binding>
       <binding name="mbox">
-	      <uri>mailto:bob2@work.example.org</uri>
+        <uri>mailto:bob2@work.example.org</uri>
       </binding>
     </result>
   </results>
@@ -213,7 +213,7 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
-    it('should convert a SPARQL XML response with directions', async () => {
+    it('should convert a SPARQL XML response with directions', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#"
   xmlns:its="http://www.w3.org/2005/11/its" 
@@ -230,43 +230,43 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <bnode>r1</bnode>
+        <bnode>r1</bnode>
       </binding>
       <binding name="hpage">
-	      <uri>http://work.example.org/bob1/</uri>
+        <uri>http://work.example.org/bob1/</uri>
       </binding>
       <binding name="name">
-	      <literal xml:lang="en" its:dir="ltr">Bob1</literal>
+        <literal xml:lang="en" its:dir="ltr">Bob1</literal>
       </binding>
       <binding name="nickname">
-	      <literal>Bobby1</literal>
+        <literal>Bobby1</literal>
       </binding>
       <binding name="age">
-	      <literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal>
+        <literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal>
       </binding>
       <binding name="mbox">
-	      <uri>mailto:bob1@work.example.org</uri>
+        <uri>mailto:bob1@work.example.org</uri>
       </binding>
     </result>
 
     <result>
       <binding name="x">
-	      <bnode>r2</bnode>
+        <bnode>r2</bnode>
       </binding>
       <binding name="hpage">
-	      <uri>http://work.example.org/bob2/</uri>
+        <uri>http://work.example.org/bob2/</uri>
       </binding>
       <binding name="name">
-	      <literal xml:lang="en" its:dir="rtl">Bob2</literal>
+        <literal xml:lang="en" its:dir="rtl">Bob2</literal>
       </binding>
       <binding name="nickname">
-	      <literal>Bobby2</literal>
+        <literal>Bobby2</literal>
       </binding>
       <binding name="age">
-	      <literal datatype="http://www.w3.org/2001/XMLSchema#integer">2</literal>
+        <literal datatype="http://www.w3.org/2001/XMLSchema#integer">2</literal>
       </binding>
       <binding name="mbox">
-	      <uri>mailto:bob2@work.example.org</uri>
+        <uri>mailto:bob2@work.example.org</uri>
       </binding>
     </result>
   </results>
@@ -292,7 +292,7 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
-    it('should convert a SPARQL XML response with a single binding', async () => {
+    it('should convert a SPARQL XML response with a single binding', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -301,7 +301,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <bnode>r1</bnode>
+        <bnode>r1</bnode>
       </binding>
     </result>
   </results>
@@ -312,7 +312,7 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
-    it('should convert a SPARQL XML response with a single quoted triple binding', async () => {
+    it('should convert a SPARQL XML response with a single quoted triple binding', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -321,7 +321,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
               <uri>http://example.org/alice</uri>
           </subject>
@@ -342,7 +342,7 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
-    it('should convert a SPARQL XML response with a single nested quoted triple binding in subject', async () => {
+    it('should convert a SPARQL XML response with a single nested quoted triple binding in subject', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -351,7 +351,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
             <triple>
               <subject>
@@ -379,14 +379,14 @@ describe('SparqlXmlParser', () => {
 `))))
         .toEqual([
           { '?x': DF.quad(
-              DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))),
-              DF.namedNode('http://example.org/sayedBy'),
-              DF.namedNode('http://example.org/alice'),
-            ) },
+            DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))),
+            DF.namedNode('http://example.org/sayedBy'),
+            DF.namedNode('http://example.org/alice'),
+          ) },
         ]);
     });
 
-    it('should convert a SPARQL XML response with multiple nested quoted triple bindings in subject', async () => {
+    it('should convert a SPARQL XML response with multiple nested quoted triple bindings in subject', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -395,7 +395,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
             <triple>
               <subject>
@@ -418,7 +418,7 @@ describe('SparqlXmlParser', () => {
         </triple>
       </binding>
       <binding name="y">
-	      <triple>
+        <triple>
           <subject>
             <triple>
               <subject>
@@ -460,7 +460,7 @@ describe('SparqlXmlParser', () => {
         ]);
     });
 
-    it('should convert a SPARQL XML response with multiple results with nested triples', async () => {
+    it('should convert a SPARQL XML response with multiple results with nested triples', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -469,7 +469,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
             <triple>
               <subject>
@@ -494,7 +494,7 @@ describe('SparqlXmlParser', () => {
     </result>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
             <triple>
               <subject>
@@ -534,11 +534,11 @@ describe('SparqlXmlParser', () => {
               DF.namedNode('http://example.org/sayedBy'),
               DF.namedNode('http://example.org/bob'),
             ),
-          }
+          },
         ]);
     });
 
-    it('should convert a SPARQL XML response with a single nested quoted triple binding in object', async () => {
+    it('should convert a SPARQL XML response with a single nested quoted triple binding in object', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -547,7 +547,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
               <uri>http://example.org/alice</uri>
           </subject>
@@ -575,14 +575,14 @@ describe('SparqlXmlParser', () => {
 `))))
         .toEqual([
           { '?x': DF.quad(
-              DF.namedNode('http://example.org/alice'),
-              DF.namedNode('http://example.org/says'),
-              DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))),
-            ) },
+            DF.namedNode('http://example.org/alice'),
+            DF.namedNode('http://example.org/says'),
+            DF.quad(DF.namedNode('http://example.org/alice'), DF.namedNode('http://example.org/name'), DF.literal('Alice', DF.namedNode('http://example.org/Type'))),
+          ) },
         ]);
     });
 
-    it('should convert a SPARQL XML response with an empty result', async () => {
+    it('should convert a SPARQL XML response with an empty result', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -596,7 +596,7 @@ describe('SparqlXmlParser', () => {
         .toEqual([{}]);
     });
 
-    it('should convert a SPARQL XML response with an empty binding', async () => {
+    it('should convert a SPARQL XML response with an empty binding', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -612,7 +612,7 @@ describe('SparqlXmlParser', () => {
         .toEqual([{}]);
     });
 
-    it('should convert a SPARQL XML response and emit the variables', async () => {
+    it('should convert a SPARQL XML response and emit the variables', async() => {
       const stream = parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -626,72 +626,77 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <bnode>r1</bnode>
+        <bnode>r1</bnode>
       </binding>
       <binding name="hpage">
-	      <uri>http://work.example.org/bob1/</uri>
+        <uri>http://work.example.org/bob1/</uri>
       </binding>
       <binding name="name">
-	      <literal xml:lang="en">Bob1</literal>
+        <literal xml:lang="en">Bob1</literal>
       </binding>
       <binding name="age">
-	      <literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal>
+        <literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal>
       </binding>
       <binding name="mbox">
-	      <uri>mailto:bob1@work.example.org</uri>
+        <uri>mailto:bob1@work.example.org</uri>
       </binding>
     </result>
 
     <result>
       <binding name="x">
-	      <bnode>r2</bnode>
+        <bnode>r2</bnode>
       </binding>
       <binding name="hpage">
-	      <uri>http://work.example.org/bob2/</uri>
+        <uri>http://work.example.org/bob2/</uri>
       </binding>
       <binding name="name">
-	      <literal xml:lang="en">Bob2</literal>
+        <literal xml:lang="en">Bob2</literal>
       </binding>
       <binding name="age">
-	      <literal datatype="http://www.w3.org/2001/XMLSchema#integer">2</literal>
+        <literal datatype="http://www.w3.org/2001/XMLSchema#integer">2</literal>
       </binding>
       <binding name="mbox">
-	      <uri>mailto:bob2@work.example.org</uri>
+        <uri>mailto:bob2@work.example.org</uri>
       </binding>
     </result>
   </results>
 </sparql>
 `));
-      return expect(new Promise((resolve) => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
-        DF.variable('x'), DF.variable('hpage'), DF.variable('name'), DF.variable('age'), DF.variable('mbox'), DF.variable('friend'),
+      return expect(new Promise(resolve => stream.on('variables', resolve))).resolves.toEqualRdfTermArray([
+        DF.variable('x'),
+        DF.variable('hpage'),
+        DF.variable('name'),
+        DF.variable('age'),
+        DF.variable('mbox'),
+        DF.variable('friend'),
       ]);
     });
 
-    it('should emit an error on an erroring stream', async () => {
+    it('should emit an error on an erroring stream', async() => {
       const errorStream = new PassThrough();
       errorStream._read = () => errorStream.emit('error', new Error('Some stream error'));
       return expect(arrayifyStream(parser.parseXmlResultsStream(errorStream))).rejects.toBeTruthy();
     });
 
-    it('should emit an error on an invalid XML response', async () => {
+    it('should emit an error on an invalid XML response', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`
 <?xml version="1.0"?>abc`)))).rejects.toBeTruthy();
     });
 
-    it('should emit an error on a boolean response', async () => {
+    it('should emit an error on a boolean response', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <boolean>false</boolean>
 </sparql>`)))).rejects.toBeTruthy();
     });
 
-    it('should emit an error on a empty XML', async () => {
+    it('should emit an error on a empty XML', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
 </sparql>`)))).rejects.toBeTruthy();
     });
 
-    it('should support various kinds of empty bindings', async () => {
+    it('should support various kinds of empty bindings', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -714,7 +719,7 @@ describe('SparqlXmlParser', () => {
 </sparql>`)))).resolves.toBeTruthy();
     });
 
-    it('should fail on binding with value but no name', async () => {
+    it('should fail on binding with value but no name', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -733,7 +738,7 @@ describe('SparqlXmlParser', () => {
 </sparql>`)))).rejects.toBeTruthy();
     });
 
-    it('should convert bindings with empty literals', async () => {
+    it('should convert bindings with empty literals', async() => {
       return expect(await arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -747,10 +752,10 @@ describe('SparqlXmlParser', () => {
     </result>
   </results>
 </sparql>
-`)))).toEqual([{'?x': DF.literal("")}]);
+`)))).toEqual([{ '?x': DF.literal('') }]);
     });
 
-    it('should fail on invalid term type', async () => {
+    it('should fail on invalid term type', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -764,8 +769,7 @@ describe('SparqlXmlParser', () => {
 </sparql>`)))).rejects.toBeTruthy();
     });
 
-
-    it('should not emit prefix question mark if requested', async () => {
+    it('should not emit prefix question mark if requested', async() => {
       const customParser = new SparqlXmlParser({ prefixVariableQuestionMark: false });
       return expect(await arrayifyStream(customParser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
@@ -781,10 +785,10 @@ describe('SparqlXmlParser', () => {
   </results>
 </sparql>
 `))))
-     .toEqual([{ 'x': DF.literal('foo') }]);
+        .toEqual([{ x: DF.literal('foo') }]);
     });
 
-    it('should throw on an illegal triple sub-tag', async () => {
+    it('should throw on an illegal triple sub-tag', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -793,7 +797,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
               <uri>http://example.org/alice</uri>
           </subject>
@@ -811,7 +815,7 @@ describe('SparqlXmlParser', () => {
 </sparql>`)))).rejects.toThrow(`Illegal quoted triple component 'illegal' found on line 20`);
     });
 
-    it('should throw on an incomplete triple', async () => {
+    it('should throw on an incomplete triple', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -820,7 +824,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
               <uri>http://example.org/alice</uri>
           </subject>
@@ -834,7 +838,7 @@ describe('SparqlXmlParser', () => {
 </sparql>`)))).rejects.toThrow(`Incomplete quoted triple on line 17`);
     });
 
-    it('should throw on an multiple sub-tags in triple', async () => {
+    it('should throw on an multiple sub-tags in triple', async() => {
       return expect(arrayifyStream(parser.parseXmlResultsStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <head>
@@ -843,7 +847,7 @@ describe('SparqlXmlParser', () => {
   <results>
     <result>
       <binding name="x">
-	      <triple>
+        <triple>
           <subject>
               <uri>http://example.org/alice</uri>
           </subject>
@@ -865,46 +869,46 @@ describe('SparqlXmlParser', () => {
   });
 
   describe('#parseXmlBooleanStream', () => {
-    it('should reject on an empty SPARQL XML response', async () => {
+    it('should reject on an empty SPARQL XML response', async() => {
       return expect(parser.parseXmlBooleanStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
 </sparql>`))).rejects.toBeTruthy();
     });
 
-    it('should reject on an invalid SPARQL XML response', async () => {
+    it('should reject on an invalid SPARQL XML response', async() => {
       return expect(parser.parseXmlBooleanStream(streamifyString(`
 <?xml version="1.0"?>abc`))).rejects.toBeTruthy();
     });
 
-    it('should throw on an unsupported media type version', async () => {
+    it('should throw on an unsupported media type version', async() => {
       return await expect(parser.parseXmlBooleanStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <boolean>true</boolean>
 </sparql>`), '1.2-unknown')).rejects.toThrow(`Detected unsupported version as media type parameter: 1.2-unknown`);
     });
 
-    it('should convert a true SPARQL XML boolean response', async () => {
+    it('should convert a true SPARQL XML boolean response', async() => {
       return expect(await parser.parseXmlBooleanStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <boolean>true</boolean>
-</sparql>`))).toEqual(true);
+</sparql>`))).toBe(true);
     });
 
-    it('should convert a false SPARQL XML boolean response', async () => {
+    it('should convert a false SPARQL XML boolean response', async() => {
       return expect(await parser.parseXmlBooleanStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <boolean>false</boolean>
-</sparql>`))).toEqual(false);
+</sparql>`))).toBe(false);
     });
 
-    it('should reject a results payload', async () => {
+    it('should reject a results payload', async() => {
       return expect(parser.parseXmlBooleanStream(streamifyString(`<?xml version="1.0"?>
 <sparql xmlns="http://www.w3.org/2005/sparql-results#">
   <results></results>
 </sparql>`))).rejects.toBeTruthy();
     });
 
-    it('should reject on an erroring stream', async () => {
+    it('should reject on an erroring stream', async() => {
       const errorStream = new PassThrough();
       errorStream._read = () => errorStream.emit('error', new Error('Some stream error'));
       return expect(parser.parseXmlBooleanStream(errorStream)).rejects.toBeTruthy();
