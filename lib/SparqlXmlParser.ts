@@ -1,14 +1,13 @@
-import {DataFactory} from "rdf-data-factory";
-import * as RDF from "@rdfjs/types";
-import {SaxesParser} from "@rubensworks/saxes";
-import {Transform} from "readable-stream";
+import type * as RDF from '@rdfjs/types';
+import { SaxesParser } from '@rubensworks/saxes';
+import { DataFactory } from 'rdf-data-factory';
+import { Transform } from 'readable-stream';
 
 /**
  * Parser for the SPARQL Query Results XML format.
  * @see https://www.w3.org/TR/rdf-sparql-XMLres/
  */
 export class SparqlXmlParser {
-
   public static SUPPORTED_VERSIONS: string[] = [
     '1.2',
     '1.2-basic',
@@ -19,11 +18,11 @@ export class SparqlXmlParser {
   private readonly prefixVariableQuestionMark?: boolean;
   private readonly parseUnsupportedVersions: boolean;
 
-  constructor(settings?: ISettings) {
+  public constructor(settings?: ISettings) {
     settings = settings || {};
     this.dataFactory = settings.dataFactory || new DataFactory();
-    this.prefixVariableQuestionMark = !!settings.prefixVariableQuestionMark;
-    this.parseUnsupportedVersions = !!settings.parseUnsupportedVersions;
+    this.prefixVariableQuestionMark = Boolean(settings.prefixVariableQuestionMark);
+    this.parseUnsupportedVersions = Boolean(settings.parseUnsupportedVersions);
   }
 
   /**
@@ -45,7 +44,9 @@ export class SparqlXmlParser {
    * @return {NodeJS.ReadableStream} A stream of bindings.
    */
   public parseXmlResultsStream(sparqlResponseStream: NodeJS.ReadableStream, version?: string): NodeJS.ReadableStream {
-    const errorListener = (error: Error) => resultStream.emit('error', error);
+    const errorListener = (error: Error): void => {
+      resultStream.emit('error', error);
+    };
     sparqlResponseStream.on('error', errorListener);
 
     const parser = new SaxesParser();
@@ -54,78 +55,85 @@ export class SparqlXmlParser {
     let resultsFound = false;
     const variables: RDF.Variable[] = [];
     let currentBindings: IBindings = {};
-    let currentBindingName: string = '';
-    let currentBindingType: string = '';
-    let currentBindingAnnotation: { language: string, direction?: 'ltr' | 'rtl' } | RDF.NamedNode | undefined;
-    let currentText: string = '';
-    let currentQuotedTriples: { currentComponent?: 'subject' | 'predicate' | 'object'; components: { subject?: RDF.Term; predicate?: RDF.Term; object?: RDF.Term } }[] = [];
-    parser.on("error", errorListener);
-    parser.on("opentag", tag => {
-      if(tag.name === "variable" && this.stackEquals(stack,['sparql', 'head'])) {
+    let currentBindingName = '';
+    let currentBindingType = '';
+    let currentBindingAnnotation: { language: string; direction?: 'ltr' | 'rtl' } | RDF.NamedNode | undefined;
+    let currentText = '';
+    let currentQuotedTriples: {
+      currentComponent?: 'subject' | 'predicate' | 'object';
+      components: { subject?: RDF.Term; predicate?: RDF.Term; object?: RDF.Term };
+    }[] = [];
+    parser.on('error', errorListener);
+    parser.on('opentag', (tag) => {
+      if (tag.name === 'variable' && this.stackEquals(stack, [ 'sparql', 'head' ])) {
         variables.push(this.dataFactory.variable(tag.attributes.name));
-      } else if(tag.name === "results" && this.stackEquals(stack, ['sparql'])) {
+      } else if (tag.name === 'results' && this.stackEquals(stack, [ 'sparql' ])) {
         resultsFound = true;
-      } else if(tag.name === 'result' && this.stackEquals(stack, ['sparql', 'results'])) {
+      } else if (tag.name === 'result' && this.stackEquals(stack, [ 'sparql', 'results' ])) {
         currentBindings = {};
-      } else if(tag.name === 'binding' && this.stackEquals(stack, ['sparql', 'results', 'result'])) {
+      } else if (tag.name === 'binding' && this.stackEquals(stack, [ 'sparql', 'results', 'result' ])) {
         currentBindingName = tag.attributes.name || '';
         currentBindingType = '';
         currentBindingAnnotation = undefined;
         currentText = '';
         currentQuotedTriples = [];
-      } else if(tag.name === 'triple' && this.stackBeginsWith(stack, ['sparql', 'results', 'result'])) {
-        currentQuotedTriples.push({ components: {} });
-      } else if (stack[stack.length - 1] === 'triple' && this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding'])) {
+      } else if (tag.name === 'triple' && this.stackBeginsWith(stack, [ 'sparql', 'results', 'result' ])) {
+        currentQuotedTriples.push({ components: {}});
+      } else if (stack.at(-1) === 'triple' &&
+          this.stackBeginsWith(stack, [ 'sparql', 'results', 'result', 'binding' ])) {
         currentBindingType = '';
         currentBindingAnnotation = undefined;
         currentText = '';
-        if (!['subject', 'predicate', 'object'].includes(tag.name)) {
-          errorListener(new Error(`Illegal quoted triple component '${tag.name}' found on line ${parser.line + 1}`));
+        if ([ 'subject', 'predicate', 'object' ].includes(tag.name)) {
+          currentQuotedTriples.at(-1).currentComponent = <any>tag.name;
         } else {
-          currentQuotedTriples[currentQuotedTriples.length - 1].currentComponent = <any>tag.name;
+          errorListener(new Error(`Illegal quoted triple component '${tag.name}' found on line ${parser.line + 1}`));
         }
-      } else if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding'])) {
+      } else if (this.stackBeginsWith(stack, [ 'sparql', 'results', 'result', 'binding' ])) {
         currentBindingType = tag.name;
-        if('xml:lang' in tag.attributes) {
+        if ('xml:lang' in tag.attributes) {
           currentBindingAnnotation = {
             language: tag.attributes['xml:lang'],
             direction: <'ltr' | 'rtl' | undefined> tag.attributes['its:dir'],
           };
-        } else if('datatype' in tag.attributes) {
+        } else if ('datatype' in tag.attributes) {
           currentBindingAnnotation = this.dataFactory.namedNode(tag.attributes.datatype);
         } else {
           currentBindingAnnotation = undefined;
         }
       } else if (tag.name === 'sparql' && tag.attributes.version) {
         if (!this.isValidVersion(tag.attributes.version)) {
-          resultStream.emit("error", new Error(`Detected unsupported version: ${tag.attributes.version}`));
+          resultStream.emit('error', new Error(`Detected unsupported version: ${tag.attributes.version}`));
         }
         resultStream.emit('version', tag.attributes.version);
       }
       stack.push(tag.name);
-    })
-    parser.on("closetag", tag => {
-      if(this.stackEquals(stack, ['sparql', 'head'])) {
-        resultStream.emit("variables", variables);
+    });
+    parser.on('closetag', (_tag) => {
+      if (this.stackEquals(stack, [ 'sparql', 'head' ])) {
+        resultStream.emit('variables', variables);
         variablesFound = true;
       }
-      if(this.stackEquals(stack, ['sparql', 'results', 'result'])) {
+      if (this.stackEquals(stack, [ 'sparql', 'results', 'result' ])) {
         resultStream.push(currentBindings);
       }
-      if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding'])) {
+      if (this.stackBeginsWith(stack, [ 'sparql', 'results', 'result', 'binding' ])) {
         // Determine current RDF term value
         let term: RDF.Term | undefined;
-        if(!currentBindingName && currentBindingType) {
+        if (!currentBindingName && currentBindingType) {
           errorListener(new Error(`Terms should have a name on line ${parser.line + 1}`));
-        } else if(currentBindingType === 'uri') {
+        } else if (currentBindingType === 'uri') {
           term = this.dataFactory.namedNode(currentText);
-        } else if(currentBindingType === 'bnode') {
+        } else if (currentBindingType === 'bnode') {
           term = this.dataFactory.blankNode(currentText);
         } else if (currentBindingType === 'literal') {
           term = this.dataFactory.literal(currentText, currentBindingAnnotation);
-        } else if (stack[stack.length - 1] === 'triple') {
+        } else if (stack.at(-1) === 'triple') {
           const currentQuotedTriple = currentQuotedTriples.pop();
-          if (currentQuotedTriple && currentQuotedTriple.components.subject && currentQuotedTriple.components.predicate && currentQuotedTriple.components.object) {
+          if (currentQuotedTriple &&
+              currentQuotedTriple.components.subject &&
+              currentQuotedTriple.components.predicate &&
+              currentQuotedTriple.components.object) {
             term = this.dataFactory.quad(
               <RDF.Quad_Subject> currentQuotedTriple.components.subject,
               <RDF.Quad_Predicate> currentQuotedTriple.components.predicate,
@@ -134,21 +142,21 @@ export class SparqlXmlParser {
           } else {
             errorListener(new Error(`Incomplete quoted triple on line ${parser.line + 1}`));
           }
-        } else if(currentBindingType) {
+        } else if (currentBindingType) {
           errorListener(new Error(`Invalid term type '${currentBindingType}' on line ${parser.line + 1}`));
         }
 
         if (term) {
           if (currentQuotedTriples.length > 0) {
             // If we're in a quoted triple, store the term inside the active quoted triple
-            const currentQuotedTriple = currentQuotedTriples[currentQuotedTriples.length - 1];
+            const currentQuotedTriple = currentQuotedTriples.at(-1);
             if (currentQuotedTriple.components[currentQuotedTriple.currentComponent]) {
               errorListener(new Error(`The ${currentQuotedTriple.currentComponent} in a quoted triple on line ${parser.line + 1} was already defined before`));
             }
             currentQuotedTriple.components[currentQuotedTriple.currentComponent] = term;
           } else {
             // Store the value in the current bindings object
-            const key = this.prefixVariableQuestionMark ? ('?' + currentBindingName) : currentBindingName;
+            const key = this.prefixVariableQuestionMark ? (`?${currentBindingName}`) : currentBindingName;
             currentBindings[key] = term;
           }
         }
@@ -156,28 +164,29 @@ export class SparqlXmlParser {
         currentBindingType = undefined;
       }
       stack.pop();
-    })
-    parser.on("text", text => {
-      if(this.stackBeginsWith(stack, ['sparql', 'results', 'result', 'binding']) && stack[stack.length - 1] === currentBindingType) {
+    });
+    parser.on('text', (text) => {
+      if (this.stackBeginsWith(stack, [ 'sparql', 'results', 'result', 'binding' ]) &&
+          stack.at(-1) === currentBindingType) {
         currentText = text;
       }
-    })
+    });
 
     const resultStream = sparqlResponseStream
-        .on("end", _ => {
-          if (!resultsFound) {
-            resultStream.emit("error", new Error("No valid SPARQL query results were found."))
-          } else if (!variablesFound) {
-            resultStream.emit('variables', []);
-          }
-        })
-        .pipe(new Transform({
-          objectMode: true,
-          transform(chunk: any, encoding: string, callback: (error?: Error | null, data?: any) => void) {
-            parser.write(chunk);
-            callback();
-          }
-        }));
+      .on('end', (_) => {
+        if (!resultsFound) {
+          resultStream.emit('error', new Error('No valid SPARQL query results were found.'));
+        } else if (!variablesFound) {
+          resultStream.emit('variables', []);
+        }
+      })
+      .pipe(new Transform({
+        objectMode: true,
+        transform(chunk: any, encoding: string, callback: (error?: Error | null, data?: any) => void) {
+          parser.write(chunk);
+          callback();
+        },
+      }));
 
     if (version && !this.isValidVersion(version)) {
       resultStream.destroy(new Error(`Detected unsupported version as media type parameter: ${version}`));
@@ -200,30 +209,30 @@ export class SparqlXmlParser {
     return new Promise((resolve, reject) => {
       const parser = new SaxesParser();
       const stack: string[] = [];
-      parser.on("error", reject);
-      parser.on("opentag", tag => {
+      parser.on('error', reject);
+      parser.on('opentag', (tag) => {
         stack.push(tag.name);
-      })
-      parser.on("closetag", _ => {
+      });
+      parser.on('closetag', (_) => {
         stack.pop();
-      })
-      parser.on("text", text => {
-        if(this.stackEquals(stack, ['sparql', 'boolean'])) {
+      });
+      parser.on('text', (text) => {
+        if (this.stackEquals(stack, [ 'sparql', 'boolean' ])) {
           resolve(text === 'true');
         }
-      })
+      });
       sparqlResponseStream
-          .on('error', reject)
-          .on('data', d => parser.write(d))
-          .on('end', () => reject(new Error('No valid ASK response was found.')));
+        .on('error', reject)
+        .on('data', d => parser.write(d))
+        .on('end', () => reject(new Error('No valid ASK response was found.')));
     });
   }
 
-  private stackEquals(a: string[], b: string[]) {
+  private stackEquals(a: string[], b: string[]): boolean {
     return a.length === b.length && a.every((v, i) => b[i] === v);
   }
 
-  private stackBeginsWith(a: string[], b: string[]) {
+  private stackBeginsWith(a: string[], b: string[]): boolean {
     return a.length >= b.length && b.every((v, i) => a[i] === v);
   }
 }
@@ -249,6 +258,4 @@ export interface ISettings {
 /**
  * A bindings object.
  */
-export interface IBindings {
-  [key: string]: RDF.Term;
-}
+export type IBindings = Record<string, RDF.Term>;
