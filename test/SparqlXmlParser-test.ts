@@ -1,5 +1,5 @@
 import { PassThrough } from 'node:stream';
-import arrayifyStream from 'arrayify-stream';
+import { arrayifyStream } from 'arrayify-stream';
 import 'jest-rdf';
 import { DataFactory } from 'rdf-data-factory';
 import { SparqlXmlParser } from '../lib/SparqlXmlParser';
